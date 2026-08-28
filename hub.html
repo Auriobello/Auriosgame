@@ -39,7 +39,7 @@ h1{
 }
 #fonte{margin-top:14px;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muto)}
 #fonte::before,#fonte::after{content:'··';margin:0 10px;color:rgba(232,193,90,.4)}
-/* ---- COUNTDOWN DI APERTURA ---- */
+/* ---- COUNTDOWN ---- */
 #countdown{
   min-height:52vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
@@ -68,7 +68,7 @@ h1{
 }
 @keyframes batti{0%,100%{opacity:.9}50%{opacity:.25}}
 .cd-data{margin-top:44px;font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:rgba(141,130,102,.85)}
-/* ---- barra di ricerca (visibile solo a catalogo caricato) ---- */
+/* ---- barra di ricerca ---- */
 #cercaZone{
   position:sticky;top:0;z-index:20;
   padding:18px 20px 10px;
@@ -180,7 +180,7 @@ main{max-width:1220px;margin:0 auto;padding:30px 26px 30px}
 .t-online{color:#64a7ff;border-color:rgba(100,167,255,.45);background:rgba(100,167,255,.12);box-shadow:0 0 10px rgba(100,167,255,.18)}
 .t-ritmo{color:#ff8ac2;border-color:rgba(255,138,194,.45);background:rgba(255,138,194,.12);box-shadow:0 0 10px rgba(255,138,194,.18)}
 .t-violenza{color:#ff4747;border-color:rgba(255,71,71,.5);background:rgba(150,20,20,.16);box-shadow:0 0 10px rgba(255,71,71,.2)}
-/* ---- stati di caricamento ---- */
+/* ---- stati ---- */
 #stato{display:flex;flex-direction:column;align-items:center;gap:20px;padding:110px 0}
 .anello{width:46px;height:46px;border-radius:50%;border:3px solid rgba(232,193,90,.16);border-top-color:var(--oro);animation:gira 1s linear infinite}
 @keyframes gira{to{transform:rotate(360deg)}}
@@ -193,7 +193,103 @@ main{max-width:1220px;margin:0 auto;padding:30px 26px 30px}
 .avviso p{color:#cfc5a9;font-size:15px;line-height:1.7}
 .avviso b{color:#fff}
 .avviso .passi{margin-top:16px;text-align:left;display:inline-block;color:#cfc5a9;font-size:14.5px;line-height:1.9}
-footer{padding:26px 20px 44px;text-align:center;color:rgba(141,130,102,.6);font-size:12px;letter-spacing:.12em}
+.avviso .mini{
+  margin-top:18px;padding:11px 24px;border-radius:10px;cursor:pointer;font-family:inherit;
+  background:transparent;border:1px solid rgba(232,193,90,.4);color:var(--oro);
+  font-size:13px;letter-spacing:.1em;text-transform:uppercase;transition:.2s;
+}
+.avviso .mini:hover{background:rgba(232,193,90,.12)}
+/* ---- POP-UP DI APERTURA ---- */
+#velo{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:rgba(4,3,2,.58);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease;
+}
+#velo.attivo{opacity:1;pointer-events:auto}
+.popup{
+  max-width:580px;width:100%;
+  position:relative;
+  padding:44px 44px 36px;
+  border-radius:22px;
+  background:linear-gradient(150deg,rgba(30,24,14,.93),rgba(12,10,6,.96));
+  border:1px solid rgba(232,193,90,.32);
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.65),
+    0 0 55px rgba(232,193,90,.09),
+    inset 0 1px 0 rgba(255,255,255,.09);
+  backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  transform:translateY(26px) scale(.955);
+  transition:transform .55s cubic-bezier(.2,.9,.25,1.15);
+}
+#velo.attivo .popup{transform:none}
+.popup::before{
+  content:'';position:absolute;left:22px;right:22px;top:2px;height:44%;
+  border-radius:22px 22px 55% 55%;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent);
+  pointer-events:none;
+}
+.pop-occhiello{
+  font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--muto);
+  text-align:center;margin-bottom:20px;
+}
+.pop-occhiello::before,.pop-occhiello::after{content:'··';margin:0 10px;color:rgba(232,193,90,.4)}
+.popup h2{
+  font-size:clamp(26px,5vw,40px);font-weight:800;letter-spacing:.1em;text-align:center;
+  background:linear-gradient(180deg,#fff3c4 0%,var(--oro) 55%,#96722a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 14px rgba(232,193,90,.22));
+  margin-bottom:24px;
+}
+.popup p{color:#d8cfb4;font-size:15.5px;line-height:1.85;text-align:center}
+.popup p b{color:#fff}
+.pop-nota{
+  margin-top:24px;padding:18px 22px;
+  border:1px solid rgba(232,193,90,.28);border-left:3px solid var(--oro);
+  border-radius:12px;background:rgba(232,193,90,.05);
+  color:#d8cfb4;font-size:14.5px;line-height:1.8;
+}
+.pop-nota b{color:var(--oro);letter-spacing:.08em}
+.pop-nota .hl{color:#fff;font-weight:700}
+.pop-btn{
+  display:block;width:100%;margin-top:28px;
+  padding:16px 20px;border:0;border-radius:14px;cursor:pointer;
+  background:linear-gradient(180deg,#f3d78a,#d8ab45);
+  color:#241a06;font-family:inherit;font-weight:800;font-size:15px;
+  letter-spacing:.22em;text-transform:uppercase;
+  box-shadow:0 8px 26px rgba(216,171,69,.28);
+  transition:transform .2s,box-shadow .3s;
+  animation:btnPulse 2.2s ease-in-out infinite;
+}
+.pop-btn:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(216,171,69,.45)}
+@keyframes btnPulse{0%,100%{box-shadow:0 8px 26px rgba(216,171,69,.28)}50%{box-shadow:0 8px 34px rgba(216,171,69,.5)}}
+/* ---- footer con trademark ---- */
+footer{padding:30px 20px 46px;text-align:center;color:rgba(141,130,102,.75);font-size:12px;letter-spacing:.14em}
+.tm{
+  display:inline-block;cursor:default;user-select:none;-webkit-user-select:none;
+  font-weight:800;font-size:14px;letter-spacing:.24em;
+  background:linear-gradient(90deg,#8d8266 0%,#c9b678 50%,#8d8266 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  transition:filter .45s ease,letter-spacing .35s ease;
+}
+.tm-sym{font-size:.55em;vertical-align:.65em;letter-spacing:0}
+.tm:hover{
+  letter-spacing:.3em;
+  background:linear-gradient(90deg,
+    #b3160e 0%,#e8c15a 22%,#ff7a29 42%,
+    #ffd98a 50%,#ff7a29 58%,#e8c15a 78%,#b3160e 100%);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:tmFlusso 1.8s linear infinite;
+  filter:
+    drop-shadow(0 0 12px rgba(179,22,14,.6))
+    drop-shadow(0 0 24px rgba(232,193,90,.45))
+    drop-shadow(0 0 42px rgba(255,122,41,.35));
+}
+@keyframes tmFlusso{from{background-position:0% 0}to{background-position:100% 0}}
 </style>
 </head>
 <body>
@@ -205,7 +301,7 @@ footer{padding:26px 20px 44px;text-align:center;color:rgba(141,130,102,.6);font-
   <div id="fonte" hidden></div>
 </header>
 
-<div id="countdown" hidden>
+<div id="countdown">
   <div class="cd-etichetta">l'apertura sarà alle <b>23:00</b></div>
   <div class="cd-timer">
     <div class="cd-gruppo"><div class="cd-num" id="cdH">00</div><div class="cd-lbl">ore</div></div>
@@ -233,17 +329,44 @@ footer{padding:26px 20px 44px;text-align:center;color:rgba(141,130,102,.6);font-
   <div id="stato"><div class="anello"></div><div class="testo">caricamento della collezione</div></div>
 </main>
 
-<footer>nuovo gioco? mettilo in una cartella categoria — poi rigenera giochi.js in locale, o fai push se sei online</footer>
+<footer>
+  © 2026 &nbsp;·&nbsp; <span class="tm">AURIOBELLO<span class="tm-sym">™</span></span> &nbsp;·&nbsp; tutti i diritti riservati
+</footer>
+
+<!-- ==== POP-UP DI APERTURA (prima visita / fine countdown) ==== -->
+<div id="velo">
+  <div class="popup" role="dialog" aria-modal="true" aria-labelledby="popTit">
+    <div class="pop-occhiello">28 agosto 2026 · ore 23:00</div>
+    <h2 id="popTit">SIAMO APERTI.</h2>
+    <p>
+      Questo è un progetto che nasce <b>per passione</b>: giochi piccoli, strani
+      e (spesso) paurosi, costruiti interamente a mano — codice, grafica e suoni —
+      e giocabili <b>gratis, direttamente nel browser</b>.<br>
+      Niente download, niente registrazione ( arriverà dopo per altro): entra e divertiti.
+    </p>
+    <div class="pop-nota">
+      <b>NOTA:</b> per adesso ci sono <span class="hl">pochi giochi</span>, ma ne rilasceremo
+      <span class="hl">altri col tempo</span>. Arriverà anche la pagina
+      <span class="hl">SEGNALAZIONI</span>, dove potrete segnalarci un bug
+      o lasciarci un consiglio.
+    </div>
+    <button id="popBtn" class="pop-btn">entra</button>
+  </div>
+</div>
 
 <script src="giochi.js"></script>
 <script>
 /* ============================================================
-   CONFIGURAZIONE DEL LANCIO — cambia solo qui per ripetere
-   l'evento (mese: 0=gennaio ... 7=agosto)
+   CONFIGURAZIONE
+   LANCIO: data e ora di apertura (mese: 0=gennaio ... 7=agosto)
+   POPUP_KEY: il "ricordo" del pop-up nel browser. Se un giorno
+   vorrai farlo riapparire a tutti, cambia il numero in fondo:
+   es. 'ag_popup_v2'
    ============================================================ */
-const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
+const LANCIO=new Date(2026,7,28,23,0,0);     // 28 agosto 2026, ore 23:00
+const POPUP_KEY='ag_popup_v1';
 
-/* ===== sfondo: nebulosa dorata in WebGL puro (nessuna libreria) ===== */
+/* ===== sfondo: nebulosa dorata in WebGL puro ===== */
 (function(){
   const cv=document.getElementById('bg');
   const gl=cv.getContext('webgl',{antialias:false,alpha:false});
@@ -313,7 +436,7 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
 })();
 
 /* ===== catalogo: API di GitHub quando e hostato, giochi.js in locale ===== */
-(function(){
+const Hub=(function(){
   const TAG_CLS={horror:'t-horror','3d':'t-3d',online:'t-online',ritmo:'t-ritmo',violenza:'t-violenza'};
   const TAG_LBL={'3d':'3D'};
   const main=document.querySelector('main');
@@ -368,7 +491,8 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
     }
     return{file,base,nome,mostra:nome.replace(/_/g,' '),tags};
   }
-  function card(cart,g,indice){
+  const INDICE=[];
+  function card(cart,g){
     const a=document.createElement('a');
     a.className='card';
     a.href=encodeURI(cart+'/'+g.file);
@@ -397,12 +521,9 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
       tags.appendChild(s);
     }
     a.append(nome,th,tags);
-    indice.push({
-      el:a,nomeEl:nome,
-      nome:g.mostra,
+    INDICE.push({el:a,nomeEl:nome,nome:g.mostra,
       haystack:(g.mostra+' '+g.tags.join(' ')+' '+cart.replace(/_/g,' ')).toLowerCase(),
-      href:a.href
-    });
+      href:a.href});
     return a;
   }
   function errore(online){
@@ -410,10 +531,11 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
     const d=document.createElement('div');d.className='avviso';
     if(online){
       d.innerHTML='<div class="tit">i giochi non sono ancora arrivati</div>'
-        +'<p>Il countdown è scaduto ma nel repository non trovo ancora le cartelle con i giochi.<br>Riprova tra poco — o clicca qui sotto.</p>'
-        +'<div class="azioni" style="margin-top:18px"><button class="mini" id="ritenta">riprova adesso</button></div>';
+        +'<p>Il countdown è scaduto ma nel repository non trovo ancora le cartelle con i giochi.<br>Riprova tra poco — o clicca qui sotto.</p>';
       main.appendChild(d);
-      document.getElementById('ritenta').onclick=()=>avvioCatalogo();
+      const b=document.createElement('button');b.className='mini';b.textContent='riprova adesso';
+      b.onclick=()=>avvio();
+      d.appendChild(b);
     }else{
       d.innerHTML='<div class="tit">nessun gioco trovato</div>'
         +'<p>Stai aprendo l\'hub in locale: serve generare il catalogo.</p>'
@@ -425,7 +547,6 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
     }
     document.getElementById('fonte').hidden=true;
   }
-  const INDICE=[];
   function render(cats,etichetta){
     main.innerHTML='';
     INDICE.length=0;
@@ -439,7 +560,7 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
       const gr=document.createElement('div');gr.className='griglia';
       cats[c].slice()
         .sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}))
-        .forEach(f=>gr.appendChild(card(c,parseGioco(f),INDICE)));
+        .forEach(f=>gr.appendChild(card(c,parseGioco(f))));
       sec.append(h,gr);
       main.appendChild(sec);
     }
@@ -451,8 +572,30 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
     main.innerHTML='<div id="stato"><div class="anello"></div><div class="testo">'+testo+'</div></div>';
   }
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  let tentativo=0;
+  async function avvio(){
+    if(githubInfo()){
+      for(let i=0;i<90;i++){ // ~30 minuti di tentativi automatici
+        try{
+          const cats=await daGitHub();
+          render(cats,'catalogo automatico · github');
+          return;
+        }catch(e){}
+        tentativo++;
+        setStato(tentativo<=1
+          ?'sto cercando i giochi…'
+          :'i giochi non sono ancora arrivati<br>riprovo tra poco…');
+        await sleep(20000);
+      }
+      errore(true);
+    }else{
+      const cats=daLista();
+      if(cats)render(cats,'catalogo locale · giochi.js');
+      else errore(false);
+    }
+  }
 
-  /* ===== ricerca live ===== */
+  /* ---- ricerca live ---- */
   const cerca=document.getElementById('cerca');
   const pulisci=document.getElementById('pulisci');
   const statoR=document.getElementById('statoRicerca');
@@ -484,10 +627,7 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
     const ql=q.toLowerCase();
     pulisci.style.display=q?'block':'none';
     if(!ql){
-      for(const it of INDICE){
-        it.el.style.display='';
-        it.nomeEl.textContent=it.nome;
-      }
+      for(const it of INDICE){it.el.style.display='';it.nomeEl.textContent=it.nome;}
       for(const sec of main.querySelectorAll('.categoria'))sec.style.display='';
       setChip(null);
       return;
@@ -501,9 +641,7 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
         if(!primo)primo=it;
         it.nomeEl.textContent='';
         it.nomeEl.appendChild(evidenzia(it.nome,ql));
-      }else{
-        it.nomeEl.textContent=it.nome;
-      }
+      }else it.nomeEl.textContent=it.nome;
     }
     for(const sec of main.querySelectorAll('.categoria')){
       const visibili=sec.querySelectorAll('.card:not([style*="none"])');
@@ -540,17 +678,44 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
   });
   pulisci.addEventListener('click',()=>{cerca.value='';applicaFiltro();cerca.focus();});
 
-  /* ===== IL LUCCHETTO: countdown fino al lancio ===== */
+  return{avvio};
+})();
+
+/* ===== countdown + pop-up: le tre strade =====
+   1) sei qui PRIMA delle 23:00 → countdown; allo scadere il pop-up
+      ti appare mentre il countdown svanisce (il momento da mito)
+   2) entri per la PRIMA volta dopo le 23:00 → pop-up subito
+   3) sei già passato → niente pop-up, dritto al catalogo          */
+(function(){
   const cdEl=document.getElementById('countdown');
   const cdH=document.getElementById('cdH'),cdM=document.getElementById('cdM'),cdS=document.getElementById('cdS');
+  const velo=document.getElementById('velo');
   let sbloccato=false;
+
+  /* il ricordo del pop-up nel browser (con paracadute se localStorage è vietato) */
+  let memoria={};
+  try{memoria=window.localStorage||{};}catch(e){memoria={};}
+  const giaVisto=()=>{try{return memoria.getItem(POPUP_KEY)==='1';}catch(e){return false;}};
+  const segnaVisto=()=>{try{memoria.setItem(POPUP_KEY,'1');}catch(e){}};
+
+  function mostraPopup(){
+    if(giaVisto())return;       // già visto: mai più
+    segnaVisto();               // dal momento in cui lo mostro, è fatto
+    velo.classList.add('attivo');
+  }
+  function chiudiPopup(){velo.classList.remove('attivo');}
+  document.getElementById('popBtn').addEventListener('click',chiudiPopup);
+  /* si chiude anche cliccando fuori o premendo Esc: gentile ma non insistente */
+  velo.addEventListener('click',e=>{if(e.target===velo)chiudiPopup();});
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&velo.classList.contains('attivo'))chiudiPopup();});
 
   function apri(){
     if(sbloccato)return;
     sbloccato=true;
     cdEl.classList.add('svanisce');
     setTimeout(()=>{cdEl.hidden=true;},850);
-    avvioCatalogo();
+    setTimeout(mostraPopup,520);     // il pop-up entra mentre il countdown svanisce
+    Hub.avvio();                     // il catalogo si carica dietro le quinte
   }
   function tick(){
     if(sbloccato)return;
@@ -560,51 +725,20 @@ const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
       apri();
       return;
     }
-    const h=Math.floor(rimasto/3600000);
-    const m=Math.floor(rimasto/60000)%60;
-    const s=Math.floor(rimasto/1000)%60;
-    cdH.textContent=String(h).padStart(2,'0');
-    cdM.textContent=String(m).padStart(2,'0');
-    cdS.textContent=String(s).padStart(2,'0');
+    cdH.textContent=String(Math.floor(rimasto/3600000)).padStart(2,'0');
+    cdM.textContent=String(Math.floor(rimasto/60000)%60).padStart(2,'0');
+    cdS.textContent=String(Math.floor(rimasto/1000)%60).padStart(2,'0');
   }
 
-  /* ===== avvio del catalogo (dopo lo sblocco) =====
-     Se i giochi non sono ancora nel repo: RIPROVA da solo ogni 20s. */
-  let tentativo=0;
-  async function avvioCatalogo(){
-    if(githubInfo()){
-      for(let i=0;i<90;i++){ // ~30 minuti di tentativi automatici
-        try{
-          const cats=await daGitHub();
-          render(cats,'catalogo automatico · github');
-          return;
-        }catch(e){}
-        try{
-          const cats=daLista();
-          if(cats){render(cats,'catalogo · giochi.js');return;}
-        }catch(e){}
-        tentativo++;
-        setStato(tentativo<=1
-          ?'sto cercando i giochi…'
-          :'i giochi non sono ancora arrivati<br>riprovo tra poco…');
-        await sleep(20000);
-      }
-      errore(true);
-    }else{
-      const cats=daLista();
-      if(cats)render(cats,'catalogo locale · giochi.js');
-      else errore(false);
-    }
-  }
-
-  /* ===== partenza ===== */
   if(Date.now()>=LANCIO.getTime()){
+    /* dopo l'apertura: countdown saltato, catalogo subito,
+       pop-up solo se è la prima volta in assoluto */
     sbloccato=true;
     cdEl.hidden=true;
-    avvioCatalogo();
+    Hub.avvio();
+    if(!giaVisto())setTimeout(mostraPopup,400);
   }else{
-    main.innerHTML='';
-    cdEl.hidden=false;
+    /* prima dell'apertura: countdown, e in attesa dei miti */
     tick();
     setInterval(tick,250);
   }
