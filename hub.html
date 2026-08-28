@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="color-scheme" content="dark"/>
+<title>AURIOBELLO'S GAMES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --oro:#e8c15a;
+  --testo:#efe7d2;
+  --muto:#8d8266;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  background:#070604;color:var(--testo);
+  font-family:'Sora',system-ui,-apple-system,sans-serif;
+  overflow-x:hidden;
+}
+/* ---- sfondo: nebulosa dorata (shader WebGL + fallback CSS) ---- */
+#bgFallback{position:fixed;inset:0;z-index:-2;background:#070604;overflow:hidden}
+#bgFallback::before,#bgFallback::after{content:'';position:absolute;inset:-25%;border-radius:50%;filter:blur(70px)}
+#bgFallback::before{background:radial-gradient(closest-side,rgba(150,105,30,.34),transparent 70%);animation:ondeA 19s ease-in-out infinite alternate}
+#bgFallback::after{background:radial-gradient(closest-side,rgba(105,75,18,.30),transparent 70%);animation:ondeB 24s ease-in-out infinite alternate}
+@keyframes ondeA{from{transform:translate(-12%,-8%) scale(1)}to{transform:translate(10%,12%) scale(1.28)}}
+@keyframes ondeB{from{transform:translate(14%,10%) scale(1.2)}to{transform:translate(-9%,-13%) scale(.92)}}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;display:block}
+/* ---- intestazione ---- */
+header{padding:58px 20px 6px;text-align:center}
+h1{
+  font-size:clamp(28px,5.5vw,62px);font-weight:800;letter-spacing:.16em;
+  background:linear-gradient(180deg,#fff3c4 0%,var(--oro) 48%,#96722a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 16px rgba(232,193,90,.28));
+}
+#fonte{margin-top:14px;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muto)}
+#fonte::before,#fonte::after{content:'··';margin:0 10px;color:rgba(232,193,90,.4)}
+/* ---- COUNTDOWN DI APERTURA ---- */
+#countdown{
+  min-height:52vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  padding:60px 20px 90px;
+  transition:opacity .8s ease,transform .8s ease;
+}
+#countdown.svanisce{opacity:0;transform:scale(1.04);pointer-events:none}
+.cd-etichetta{
+  font-size:clamp(15px,2.6vw,24px);letter-spacing:.42em;text-transform:uppercase;
+  color:var(--testo);font-weight:600;margin-bottom:34px;
+}
+.cd-etichetta b{color:var(--oro);font-weight:800}
+.cd-timer{display:flex;align-items:flex-start;gap:clamp(8px,2.4vw,26px)}
+.cd-gruppo{display:flex;flex-direction:column;align-items:center;gap:14px}
+.cd-num{
+  font-size:clamp(58px,13.5vw,150px);font-weight:800;line-height:1;
+  min-width:2.05ch;text-align:center;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#fff3c4 0%,var(--oro) 55%,#96722a 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 26px rgba(232,193,90,.25));
+}
+.cd-lbl{font-size:clamp(10px,1.4vw,14px);letter-spacing:.5em;text-transform:uppercase;color:var(--muto);margin-left:.5em}
+.cd-sep{
+  font-size:clamp(48px,11vw,124px);font-weight:800;line-height:1;color:rgba(232,193,90,.6);
+  animation:batti 1.1s ease-in-out infinite;
+}
+@keyframes batti{0%,100%{opacity:.9}50%{opacity:.25}}
+.cd-data{margin-top:44px;font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:rgba(141,130,102,.85)}
+/* ---- barra di ricerca (visibile solo a catalogo caricato) ---- */
+#cercaZone{
+  position:sticky;top:0;z-index:20;
+  padding:18px 20px 10px;
+}
+.barra{
+  position:relative;display:flex;align-items:center;gap:14px;
+  max-width:740px;margin:0 auto;
+  padding:14px 22px;border-radius:999px;
+  background:linear-gradient(120deg,rgba(255,246,220,.075),rgba(255,255,255,.025) 42%,rgba(232,193,90,.07));
+  border:1px solid rgba(255,241,205,.18);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.42),
+    inset 0 1px 0 rgba(255,255,255,.13);
+  backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+  transition:border-color .25s,box-shadow .25s;
+}
+.barra:focus-within{
+  border-color:rgba(232,193,90,.55);
+  box-shadow:
+    0 12px 36px rgba(0,0,0,.48),
+    0 0 26px rgba(232,193,90,.14),
+    inset 0 1px 0 rgba(255,255,255,.16);
+}
+.barra::before{
+  content:'';position:absolute;left:14px;right:14px;top:2px;height:42%;
+  border-radius:999px 999px 60% 60%;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),transparent);
+  pointer-events:none;
+}
+.barra svg{flex:none;width:19px;height:19px;stroke:var(--oro);opacity:.85}
+#cerca{
+  flex:1;min-width:0;background:transparent;border:0;outline:0;
+  color:#fff;font-family:inherit;font-size:16.5px;letter-spacing:.02em;
+  caret-color:var(--oro);
+}
+#cerca::placeholder{color:rgba(141,130,102,.85)}
+#pulisci{
+  flex:none;display:none;border:0;background:rgba(255,241,205,.10);
+  width:28px;height:28px;border-radius:50%;cursor:pointer;
+  color:var(--testo);font-size:15px;line-height:1;
+  transition:background .2s;
+}
+#pulisci:hover{background:rgba(232,193,90,.28)}
+#statoRicerca{max-width:740px;margin:10px auto 0;text-align:center;min-height:32px}
+#statoRicerca:empty{min-height:8px}
+#statoRicerca .chip{
+  display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;
+  padding:7px 18px;border-radius:999px;
+  background:linear-gradient(120deg,rgba(20,16,10,.82),rgba(12,10,6,.87));
+  border:1px solid rgba(232,193,90,.22);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 6px 20px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.06);
+  font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--oro);
+}
+#statoRicerca .azzera{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#statoRicerca .azzera:hover{color:#fff}
+main{max-width:1220px;margin:0 auto;padding:30px 26px 30px}
+/* ---- categorie ---- */
+.categoria{margin-bottom:52px}
+.categoria h2{
+  font-size:14px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--oro);
+  display:flex;align-items:center;gap:18px;margin-bottom:22px;
+}
+.categoria h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,193,90,.45),transparent)}
+.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+/* ---- card gioco ---- */
+.card{
+  display:block;text-decoration:none;color:inherit;
+  background:linear-gradient(180deg,rgba(22,18,11,.86),rgba(12,10,6,.92));
+  border:1px solid rgba(232,193,90,.14);border-radius:14px;
+  padding:14px 14px 13px;
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+.card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(232,193,90,.55);
+  box-shadow:0 16px 36px rgba(0,0,0,.55),0 0 24px rgba(232,193,90,.13);
+}
+.card .nome{
+  color:#fff;font-weight:600;font-size:16px;line-height:1.3;margin-bottom:10px;
+  min-height:2.6em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  word-break:break-word;
+}
+.card .nome mark{
+  background:rgba(232,193,90,.28);color:#ffe9a8;border-radius:3px;padding:0 2px;
+}
+.card .thumb{
+  position:relative;aspect-ratio:16/9;border-radius:9px;overflow:hidden;
+  background:#0a0806;border:1px solid rgba(232,193,90,.10);
+}
+.card .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
+.card:hover .thumb img{transform:scale(1.05)}
+.card .noimg{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:12px;color:rgba(232,193,90,.55);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  background:repeating-linear-gradient(45deg,rgba(232,193,90,.03) 0 12px,transparent 12px 24px),#0a0806;
+}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.tags:empty{display:none}
+.tag{
+  font-size:11.5px;font-weight:600;letter-spacing:.07em;
+  padding:3.5px 11px;border-radius:6px;border:1px solid;
+  color:#b8ab7f;border-color:rgba(184,171,127,.4);background:rgba(184,171,127,.10);
+  box-shadow:0 0 9px rgba(184,171,127,.15);
+}
+.t-horror{color:#b794f6;border-color:rgba(183,148,246,.45);background:rgba(183,148,246,.12);box-shadow:0 0 10px rgba(183,148,246,.18)}
+.t-3d{color:#ff9e57;border-color:rgba(255,158,87,.45);background:rgba(255,158,87,.12);box-shadow:0 0 10px rgba(255,158,87,.18)}
+.t-online{color:#64a7ff;border-color:rgba(100,167,255,.45);background:rgba(100,167,255,.12);box-shadow:0 0 10px rgba(100,167,255,.18)}
+.t-ritmo{color:#ff8ac2;border-color:rgba(255,138,194,.45);background:rgba(255,138,194,.12);box-shadow:0 0 10px rgba(255,138,194,.18)}
+.t-violenza{color:#ff4747;border-color:rgba(255,71,71,.5);background:rgba(150,20,20,.16);box-shadow:0 0 10px rgba(255,71,71,.2)}
+/* ---- stati di caricamento ---- */
+#stato{display:flex;flex-direction:column;align-items:center;gap:20px;padding:110px 0}
+.anello{width:46px;height:46px;border-radius:50%;border:3px solid rgba(232,193,90,.16);border-top-color:var(--oro);animation:gira 1s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+#stato .testo{color:var(--muto);font-size:12px;letter-spacing:.28em;text-transform:uppercase;text-align:center;line-height:2}
+.avviso{
+  max-width:660px;margin:60px auto;padding:36px 40px;text-align:center;
+  border:1px solid rgba(232,193,90,.25);border-radius:16px;background:rgba(12,10,6,.88);
+}
+.avviso .tit{color:var(--oro);font-weight:700;letter-spacing:.26em;font-size:17px;margin-bottom:18px;text-transform:uppercase}
+.avviso p{color:#cfc5a9;font-size:15px;line-height:1.7}
+.avviso b{color:#fff}
+.avviso .passi{margin-top:16px;text-align:left;display:inline-block;color:#cfc5a9;font-size:14.5px;line-height:1.9}
+footer{padding:26px 20px 44px;text-align:center;color:rgba(141,130,102,.6);font-size:12px;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div id="bgFallback"></div>
+<canvas id="bg"></canvas>
+
+<header>
+  <h1>AURIOBELLO'S GAMES</h1>
+  <div id="fonte" hidden></div>
+</header>
+
+<div id="countdown" hidden>
+  <div class="cd-etichetta">l'apertura sarà alle <b>23:00</b></div>
+  <div class="cd-timer">
+    <div class="cd-gruppo"><div class="cd-num" id="cdH">00</div><div class="cd-lbl">ore</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-gruppo"><div class="cd-num" id="cdM">00</div><div class="cd-lbl">minuti</div></div>
+    <div class="cd-sep">:</div>
+    <div class="cd-gruppo"><div class="cd-num" id="cdS">00</div><div class="cd-lbl">secondi</div></div>
+  </div>
+  <div class="cd-data">28 agosto 2026</div>
+</div>
+
+<div id="cercaZone" style="display:none">
+  <div class="barra">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>
+    </svg>
+    <input id="cerca" type="text" autocomplete="off" spellcheck="false"
+           placeholder="cerca un gioco, un tag o una categoria..." aria-label="cerca un gioco"/>
+    <button id="pulisci" aria-label="azzera ricerca">&times;</button>
+  </div>
+  <div id="statoRicerca"></div>
+</div>
+
+<main>
+  <div id="stato"><div class="anello"></div><div class="testo">caricamento della collezione</div></div>
+</main>
+
+<footer>nuovo gioco? mettilo in una cartella categoria — poi rigenera giochi.js in locale, o fai push se sei online</footer>
+
+<script src="giochi.js"></script>
+<script>
+/* ============================================================
+   CONFIGURAZIONE DEL LANCIO — cambia solo qui per ripetere
+   l'evento (mese: 0=gennaio ... 7=agosto)
+   ============================================================ */
+const LANCIO=new Date(2026,7,28,23,0,0);   // 28 agosto 2026, ore 23:00
+
+/* ===== sfondo: nebulosa dorata in WebGL puro (nessuna libreria) ===== */
+(function(){
+  const cv=document.getElementById('bg');
+  const gl=cv.getContext('webgl',{antialias:false,alpha:false});
+  if(!gl){cv.remove();return;}
+  const VS='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const FS=[
+  'precision highp float;',
+  'uniform float uT;uniform vec2 uR;',
+  'float hash(vec2 p){p=fract(p*vec2(234.34,435.345));p+=dot(p,p+34.23);return fract(p.x*p.y);}',
+  'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);',
+  ' float a=hash(i),b=hash(i+vec2(1.,0.)),c=hash(i+vec2(0.,1.)),d=hash(i+vec2(1.,1.));',
+  ' return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}',
+  'float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(.8,.6,-.6,.8);',
+  ' for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=.5;}return v;}',
+  'void main(){',
+  ' vec2 uv=(gl_FragCoord.xy-.5*uR)/uR.y;',
+  ' float t=uT*.07;',
+  ' float fase=uT*.06;',
+  ' vec3 oroA=vec3(.98,.82,.45);',
+  ' vec3 oroB=vec3(.85,.55,.18);',
+  ' vec3 oroC=vec3(.52,.32,.07);',
+  ' vec3 oro=mix(oroA,oroB,.5+.5*sin(fase));',
+  ' oro=mix(oro,oroC,.35+.35*sin(fase*.6+2.1));',
+  ' vec2 p=uv*1.7+vec2(t*.3,-t*.14);',
+  ' vec2 w=vec2(fbm(p+vec2(0.,t*.9)),fbm(p+vec2(5.2,1.3)-t*.7));',
+  ' float n=fbm(p+w*1.5);',
+  ' float n2=fbm(p*2.3-w*.8+vec2(-t*.5,t*.35));',
+  ' float dens=smoothstep(.32,.95,n)*.8+smoothstep(.55,.95,n2)*.3;',
+  ' dens=pow(dens,1.3);',
+  ' vec3 col=vec3(.015,.011,.006);',
+  ' col+=oro*dens*(.85+.25*sin(fase*1.7));',
+  ' col+=oroA*pow(smoothstep(.72,1.,n),2.)*.45;',
+  ' float vig=smoothstep(1.3,.3,length(uv));',
+  ' col*=mix(.3,1.,vig);',
+  ' gl_FragColor=vec4(col,1.);}',
+  ''].join('\n');
+  function compila(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);return o;}
+  const pr=gl.createProgram();
+  gl.attachShader(pr,compila(gl.VERTEX_SHADER,VS));
+  gl.attachShader(pr,compila(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){cv.remove();return;}
+  gl.useProgram(pr);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(pr,'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  const uT=gl.getUniformLocation(pr,'uT'),uR=gl.getUniformLocation(pr,'uR');
+  function ridim(){
+    const f=innerWidth<800?1:.5;
+    cv.width=Math.max(2,Math.floor(innerWidth*f));
+    cv.height=Math.max(2,Math.floor(innerHeight*f));
+    gl.viewport(0,0,cv.width,cv.height);
+  }
+  addEventListener('resize',ridim);ridim();
+  const calmo=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const t0=performance.now();
+  function quadro(ora){
+    gl.uniform1f(uT,(ora-t0)/1000);
+    gl.uniform2f(uR,cv.width,cv.height);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    if(!calmo)requestAnimationFrame(quadro);
+  }
+  requestAnimationFrame(quadro);
+})();
+
+/* ===== catalogo: API di GitHub quando e hostato, giochi.js in locale ===== */
+(function(){
+  const TAG_CLS={horror:'t-horror','3d':'t-3d',online:'t-online',ritmo:'t-ritmo',violenza:'t-violenza'};
+  const TAG_LBL={'3d':'3D'};
+  const main=document.querySelector('main');
+
+  function githubInfo(){
+    if(!location.hostname.endsWith('.github.io'))return null;
+    const parti=location.pathname.split('/').filter(Boolean);
+    if(!parti.length)return null;
+    return{owner:location.hostname.split('.')[0],repo:parti[0]};
+  }
+  async function daGitHub(){
+    const g=githubInfo();if(!g)throw new Error('no');
+    const info=await fetch('https://api.github.com/repos/'+g.owner+'/'+g.repo)
+      .then(r=>{if(!r.ok)throw new Error('repo');return r.json();});
+    const ramo=info.default_branch||'main';
+    const albero=await fetch('https://api.github.com/repos/'+g.owner+'/'+g.repo+'/git/trees/'+ramo+'?recursive=1')
+      .then(r=>{if(!r.ok)throw new Error('albero');return r.json();});
+    const cats={};
+    for(const it of(albero.tree||[])){
+      if(it.type!=='blob')continue;
+      const p=it.path.split('/');
+      if(p.length!==2)continue;
+      const [cart,file]=p;
+      if(cart.startsWith('.')||cart.startsWith('_'))continue;
+      if(!/\.html?$/i.test(file))continue;
+      if(file.startsWith('.')||file.startsWith('_'))continue;
+      (cats[cart]=cats[cart]||[]).push(file);
+    }
+    if(!Object.keys(cats).length)throw new Error('vuoto');
+    return cats;
+  }
+  function daLista(){
+    const d=window.GIOCHI_HUB;
+    if(!d)return null;
+    const cats={};
+    for(const c in d){
+      if(!Array.isArray(d[c]))continue;
+      const l=d[c].filter(x=>typeof x==='string'&&/\.html?$/i.test(x));
+      if(l.length)cats[c]=l;
+    }
+    return Object.keys(cats).length?cats:null;
+  }
+  /* parsing: nome--tag1-tag2.html (underscore nel nome = spazio) */
+  function parseGioco(file){
+    const base=file.replace(/\.html?$/i,'');
+    let nome=base,tags=[];
+    const i=base.indexOf('--');
+    if(i>=0){
+      nome=base.slice(0,i);
+      const t=base.slice(i+2);
+      if(t)tags=t.split('-').filter(Boolean);
+    }
+    return{file,base,nome,mostra:nome.replace(/_/g,' '),tags};
+  }
+  function card(cart,g,indice){
+    const a=document.createElement('a');
+    a.className='card';
+    a.href=encodeURI(cart+'/'+g.file);
+    a.target='_blank';a.rel='noopener';a.title=g.mostra;
+    const nome=document.createElement('div');
+    nome.className='nome';nome.textContent=g.mostra;
+    const th=document.createElement('div');th.className='thumb';
+    const noimg=document.createElement('div');noimg.className='noimg';
+    noimg.textContent=g.mostra;th.appendChild(noimg);
+    const img=document.createElement('img');
+    img.alt='';img.loading='lazy';
+    img.onload=()=>noimg.remove();
+    img.onerror=()=>{
+      if(img.dataset.secondo){img.remove();return;}
+      img.dataset.secondo='1';
+      img.src=encodeURI(cart+'/'+g.base+'.png');
+    };
+    img.src=encodeURI(cart+'/'+g.nome+'.png');
+    th.appendChild(img);
+    const tags=document.createElement('div');tags.className='tags';
+    for(const t of g.tags){
+      const k=t.toLowerCase();
+      const s=document.createElement('span');
+      s.className='tag '+(TAG_CLS[k]||'');
+      s.textContent=TAG_LBL[k]||t;
+      tags.appendChild(s);
+    }
+    a.append(nome,th,tags);
+    indice.push({
+      el:a,nomeEl:nome,
+      nome:g.mostra,
+      haystack:(g.mostra+' '+g.tags.join(' ')+' '+cart.replace(/_/g,' ')).toLowerCase(),
+      href:a.href
+    });
+    return a;
+  }
+  function errore(online){
+    main.innerHTML='';
+    const d=document.createElement('div');d.className='avviso';
+    if(online){
+      d.innerHTML='<div class="tit">i giochi non sono ancora arrivati</div>'
+        +'<p>Il countdown è scaduto ma nel repository non trovo ancora le cartelle con i giochi.<br>Riprova tra poco — o clicca qui sotto.</p>'
+        +'<div class="azioni" style="margin-top:18px"><button class="mini" id="ritenta">riprova adesso</button></div>';
+      main.appendChild(d);
+      document.getElementById('ritenta').onclick=()=>avvioCatalogo();
+    }else{
+      d.innerHTML='<div class="tit">nessun gioco trovato</div>'
+        +'<p>Stai aprendo l\'hub in locale: serve generare il catalogo.</p>'
+        +'<div class="passi">1 · apri <b>genera_lista.html</b> (nella stessa cartella di questo file)<br>'
+        +'2 · clicca e scegli questa cartella madre<br>'
+        +'3 · salva <b>giochi.js</b> qui accanto (il browser lo scarica da solo)<br>'
+        +'4 · ricarica l\'hub</div>';
+      main.appendChild(d);
+    }
+    document.getElementById('fonte').hidden=true;
+  }
+  const INDICE=[];
+  function render(cats,etichetta){
+    main.innerHTML='';
+    INDICE.length=0;
+    const nomi=Object.keys(cats)
+      .filter(c=>cats[c]&&cats[c].length)
+      .sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}));
+    if(!nomi.length){errore(!!githubInfo());return;}
+    for(const c of nomi){
+      const sec=document.createElement('section');sec.className='categoria';
+      const h=document.createElement('h2');h.textContent=c.replace(/_/g,' ');
+      const gr=document.createElement('div');gr.className='griglia';
+      cats[c].slice()
+        .sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'}))
+        .forEach(f=>gr.appendChild(card(c,parseGioco(f),INDICE)));
+      sec.append(h,gr);
+      main.appendChild(sec);
+    }
+    const fo=document.getElementById('fonte');
+    fo.textContent=etichetta;fo.hidden=false;
+    document.getElementById('cercaZone').style.display='block';
+  }
+  function setStato(testo){
+    main.innerHTML='<div id="stato"><div class="anello"></div><div class="testo">'+testo+'</div></div>';
+  }
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+  /* ===== ricerca live ===== */
+  const cerca=document.getElementById('cerca');
+  const pulisci=document.getElementById('pulisci');
+  const statoR=document.getElementById('statoRicerca');
+  function setChip(parti){
+    statoR.innerHTML='';
+    if(!parti)return;
+    const chip=document.createElement('span');chip.className='chip';
+    for(const p of parti)
+      chip.appendChild(typeof p==='string'?document.createTextNode(p):p);
+    statoR.appendChild(chip);
+  }
+  function evidenzia(testo,q){
+    const fr=document.createDocumentFragment();
+    const t=testo.toLowerCase();
+    let i=0;
+    for(;;){
+      const j=t.indexOf(q,i);
+      if(j<0){fr.appendChild(document.createTextNode(testo.slice(i)));break;}
+      fr.appendChild(document.createTextNode(testo.slice(i,j)));
+      const m=document.createElement('mark');
+      m.textContent=testo.slice(j,j+q.length);
+      fr.appendChild(m);
+      i=j+q.length;
+    }
+    return fr;
+  }
+  function applicaFiltro(){
+    const q=cerca.value.trim();
+    const ql=q.toLowerCase();
+    pulisci.style.display=q?'block':'none';
+    if(!ql){
+      for(const it of INDICE){
+        it.el.style.display='';
+        it.nomeEl.textContent=it.nome;
+      }
+      for(const sec of main.querySelectorAll('.categoria'))sec.style.display='';
+      setChip(null);
+      return;
+    }
+    let trovati=0,primo=null;
+    for(const it of INDICE){
+      const ok=it.haystack.includes(ql);
+      it.el.style.display=ok?'':'none';
+      if(ok){
+        trovati++;
+        if(!primo)primo=it;
+        it.nomeEl.textContent='';
+        it.nomeEl.appendChild(evidenzia(it.nome,ql));
+      }else{
+        it.nomeEl.textContent=it.nome;
+      }
+    }
+    for(const sec of main.querySelectorAll('.categoria')){
+      const visibili=sec.querySelectorAll('.card:not([style*="none"])');
+      sec.style.display=visibili.length?'':'none';
+    }
+    if(trovati>0){
+      const parti=[trovati+(trovati===1?' gioco trovato':' giochi trovati')];
+      if(trovati===1&&primo){
+        parti.push(' · ');
+        const apri=document.createElement('span');
+        apri.className='azzera';
+        apri.textContent='invio per aprirlo';
+        apri.onclick=()=>window.open(primo.href,'_blank','noopener');
+        parti.push(apri);
+      }
+      setChip(parti);
+    }else{
+      const az=document.createElement('span');
+      az.className='azzera';az.textContent='azzera la ricerca';
+      az.onclick=()=>{cerca.value='';applicaFiltro();cerca.focus();};
+      setChip(['nessun risultato · ',az]);
+    }
+  }
+  cerca.addEventListener('input',applicaFiltro);
+  cerca.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      const q=cerca.value.trim().toLowerCase();
+      if(!q)return;
+      const primo=INDICE.find(it=>it.haystack.includes(q));
+      if(primo)window.open(primo.href,'_blank','noopener');
+    }else if(e.key==='Escape'){
+      cerca.value='';applicaFiltro();
+    }
+  });
+  pulisci.addEventListener('click',()=>{cerca.value='';applicaFiltro();cerca.focus();});
+
+  /* ===== IL LUCCHETTO: countdown fino al lancio ===== */
+  const cdEl=document.getElementById('countdown');
+  const cdH=document.getElementById('cdH'),cdM=document.getElementById('cdM'),cdS=document.getElementById('cdS');
+  let sbloccato=false;
+
+  function apri(){
+    if(sbloccato)return;
+    sbloccato=true;
+    cdEl.classList.add('svanisce');
+    setTimeout(()=>{cdEl.hidden=true;},850);
+    avvioCatalogo();
+  }
+  function tick(){
+    if(sbloccato)return;
+    const rimasto=LANCIO-Date.now();
+    if(rimasto<=0){
+      cdH.textContent='00';cdM.textContent='00';cdS.textContent='00';
+      apri();
+      return;
+    }
+    const h=Math.floor(rimasto/3600000);
+    const m=Math.floor(rimasto/60000)%60;
+    const s=Math.floor(rimasto/1000)%60;
+    cdH.textContent=String(h).padStart(2,'0');
+    cdM.textContent=String(m).padStart(2,'0');
+    cdS.textContent=String(s).padStart(2,'0');
+  }
+
+  /* ===== avvio del catalogo (dopo lo sblocco) =====
+     Se i giochi non sono ancora nel repo: RIPROVA da solo ogni 20s. */
+  let tentativo=0;
+  async function avvioCatalogo(){
+    if(githubInfo()){
+      for(let i=0;i<90;i++){ // ~30 minuti di tentativi automatici
+        try{
+          const cats=await daGitHub();
+          render(cats,'catalogo automatico · github');
+          return;
+        }catch(e){}
+        try{
+          const cats=daLista();
+          if(cats){render(cats,'catalogo · giochi.js');return;}
+        }catch(e){}
+        tentativo++;
+        setStato(tentativo<=1
+          ?'sto cercando i giochi…'
+          :'i giochi non sono ancora arrivati<br>riprovo tra poco…');
+        await sleep(20000);
+      }
+      errore(true);
+    }else{
+      const cats=daLista();
+      if(cats)render(cats,'catalogo locale · giochi.js');
+      else errore(false);
+    }
+  }
+
+  /* ===== partenza ===== */
+  if(Date.now()>=LANCIO.getTime()){
+    sbloccato=true;
+    cdEl.hidden=true;
+    avvioCatalogo();
+  }else{
+    main.innerHTML='';
+    cdEl.hidden=false;
+    tick();
+    setInterval(tick,250);
+  }
+})();
+</script>
+</body>
+</html>
