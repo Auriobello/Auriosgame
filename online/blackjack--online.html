@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VENTUNO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --ivory:#e8e0d0; --red:#b3242c; --dim:#8d8271; --faint:rgba(232,224,208,.22) }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#050403}
+  body{font-family:'IBM Plex Mono',monospace;color:var(--ivory)}
+  canvas{display:block}
+  button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+
+  #turnTag{position:fixed;top:26px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.3em;
+    text-transform:uppercase;color:var(--dim);pointer-events:none;z-index:10;user-select:none;white-space:nowrap}
+  #turnTag.mine{color:var(--red)}
+  #announce{position:fixed;top:32%;left:0;right:0;text-align:center;font-family:'Bebas Neue',sans-serif;
+    font-size:46px;letter-spacing:.16em;color:var(--ivory);opacity:0;pointer-events:none;z-index:10;user-select:none}
+  #announce.red{color:var(--red)}
+  #announce.gold{color:#d9b96a}
+  #moneyHUD{position:fixed;top:26px;left:30px;z-index:10;font-size:13px;letter-spacing:.18em;color:#d9b96a;
+    pointer-events:none;user-select:none;display:none}
+  #moneyHUD small{display:block;font-size:8.5px;letter-spacing:.3em;color:var(--dim);margin-top:4px;text-transform:uppercase}
+
+  #log{position:fixed;right:30px;bottom:26px;z-index:10;pointer-events:none;text-align:right;max-width:380px;user-select:none}
+  .logline{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ivory);padding:2px 0}
+  .logline.win{color:#d9b96a}
+  .logline.bad{color:var(--red)}
+  .logline.sys{color:var(--dim)}
+  #log .logline:nth-last-child(2){opacity:.72}
+  #log .logline:nth-last-child(3){opacity:.52}
+  #log .logline:nth-last-child(4){opacity:.35}
+  #log .logline:nth-last-child(5){opacity:.2}
+
+  #choiceWrap{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:12;display:none;
+    flex-direction:column;align-items:center;gap:10px;pointer-events:none;user-select:none}
+  #optBar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .obtn{position:relative;display:flex;align-items:center;gap:13px;border:1px solid var(--faint);
+    padding:9px 18px 9px 10px;text-align:left;background:rgba(5,4,3,.62)}
+  .key{font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:34px;height:42px;flex:none;padding:0 6px;
+    border:1px solid rgba(232,224,208,.25);display:flex;align-items:center;justify-content:center;color:var(--dim);
+    animation:kpulse 2.4s infinite}
+  @keyframes kpulse{0%,100%{border-color:rgba(232,224,208,.25);color:var(--dim)}50%{border-color:rgba(179,36,44,.75);color:var(--red)}}
+  .obtn b{display:block;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:21px;letter-spacing:.16em}
+  .obtn i{display:block;font-style:normal;font-size:8.5px;letter-spacing:.05em;color:var(--dim);margin-top:3px;line-height:1.5;max-width:230px}
+  #choiceHint{font-size:8.5px;letter-spacing:.22em;color:#6f6555;text-transform:uppercase}
+
+  #menuHUD{position:fixed;left:0;right:0;bottom:30px;z-index:15;display:flex;flex-direction:column;
+    align-items:center;gap:12px;pointer-events:none;transition:opacity .6s, visibility .6s}
+  #menuHUD.away{opacity:0;visibility:hidden}
+  #nameWrap{pointer-events:auto;display:flex;align-items:center;gap:12px}
+  #nameWrap label{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+  #nameInput{background:none;border:none;border-bottom:1px solid var(--faint);color:var(--ivory);
+    font-family:inherit;font-size:13px;letter-spacing:.22em;text-transform:uppercase;text-align:center;
+    width:200px;padding:6px 4px;outline:none}
+  #nameInput:focus{border-color:var(--red)}
+  #menuHint{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#cfc5b2;min-height:14px;text-align:center;max-width:92vw}
+  #menuTitle{position:fixed;top:30px;left:0;right:0;text-align:center;z-index:15;pointer-events:none;user-select:none}
+  #menuTitle h1{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:46px;letter-spacing:.22em;line-height:.9}
+  #menuTitle h1 em{color:var(--red);font-style:normal}
+  #menuTitle p{font-size:9px;letter-spacing:.44em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+
+  #lobbyTag{position:fixed;top:26px;right:30px;z-index:15;font-size:10px;letter-spacing:.26em;color:#cfc5b2;
+    border:1px solid rgba(232,224,208,.2);padding:8px 14px;text-transform:uppercase;pointer-events:none;user-select:none}
+  #lobbyTag.hidden{display:none}
+
+  #netPanel{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.72)}
+  #netPanel.hidden{display:none}
+  .np-inner{background:#0c0906;border:1px solid rgba(232,224,208,.2);padding:34px 44px;text-align:center;min-width:340px}
+  .np-title{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:30px;letter-spacing:.2em}
+  .np-title em{color:var(--red);font-style:normal}
+  .np-sub{font-size:9px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase;margin:10px 0 24px;line-height:2}
+  #npCreate{border:1px solid rgba(232,224,208,.4);padding:12px 30px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;transition:.15s}
+  #npCreate:hover{border-color:var(--red);color:var(--red)}
+  #npJoinRow{display:flex;gap:8px;margin-top:14px;justify-content:center}
+  #npCode{background:none;border:1px solid var(--faint);color:var(--ivory);font-family:inherit;font-size:14px;
+    letter-spacing:.4em;text-transform:uppercase;text-align:center;width:130px;padding:10px 6px;outline:none}
+  #npCode:focus{border-color:var(--red)}
+  #npJoin{border:1px solid rgba(232,224,208,.4);padding:0 22px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;transition:.15s}
+  #npJoin:hover{border-color:var(--red);color:var(--red)}
+  #npStatus{font-size:9.5px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;margin-top:18px;min-height:12px}
+  #npStatus.err{color:#d97b7b}
+  #npClose{margin-top:20px;font-size:9px;letter-spacing:.3em;color:#6f6555;text-transform:uppercase}
+  #npClose:hover{color:var(--ivory)}
+
+  #chat{position:fixed;left:24px;bottom:24px;width:330px;z-index:13;display:none;flex-direction:column;
+    background:rgba(6,5,4,.85);border:1px solid rgba(232,224,208,.18);padding:10px 12px 8px}
+  #chat.open{display:flex}
+  #chatLog{max-height:150px;overflow-y:auto;margin-bottom:7px;display:flex;flex-direction:column;gap:3px;scrollbar-width:thin}
+  .cmsg{font-size:11px;letter-spacing:.03em;color:#d8cfc0;word-break:break-word;line-height:1.45}
+  .cmsg span{font-weight:600;margin-right:6px}
+  #chatInput{background:none;border:none;border-top:1px solid rgba(232,224,208,.18);color:var(--ivory);
+    font-family:inherit;font-size:11px;padding:7px 2px 3px;outline:none;letter-spacing:.05em}
+  #chatInput::placeholder{color:#5d554a}
+  #chatHint{position:fixed;left:26px;bottom:22px;z-index:10;font-size:9px;letter-spacing:.3em;
+    color:#5d554a;text-transform:uppercase;pointer-events:none;user-select:none}
+
+  .screen{position:fixed;inset:0;z-index:20}
+  .hidden{display:none!important}
+  #winScreen{background:rgba(4,3,2,.82);display:flex;align-items:center;justify-content:center}
+  .w-inner{text-align:center;max-width:680px;padding:20px}
+  .w-kicker{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--dim)}
+  .w-name{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:86px;letter-spacing:.1em;margin:14px 0 4px}
+  .w-name::after{content:'';display:block;width:70px;height:5px;background:var(--red);margin:10px auto 0}
+  .w-sub{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#d9b96a}
+  .w-stats{margin-top:26px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#6f6555}
+  .w-btns{margin-top:34px;display:flex;gap:12px;justify-content:center}
+  .w-btns button{border:1px solid rgba(232,224,208,.4);padding:13px 36px;font-size:11px;
+    letter-spacing:.3em;text-transform:uppercase;transition:.15s}
+  .w-btns button:hover{border-color:var(--red);color:var(--red)}
+  .w-btns .ghostbtn{border-color:var(--faint);color:var(--dim)}
+</style>
+</head>
+<body>
+
+<div id="menuTitle">
+  <h1>VENT<em>UNO</em></h1>
+  <p>blackjack · la stessa cantina</p>
+</div>
+<div id="moneyHUD"></div>
+<div id="turnTag"></div>
+<div id="announce"></div>
+<div id="log"></div>
+
+<div id="choiceWrap">
+  <div id="optBar"></div>
+  <div id="choiceHint"></div>
+</div>
+
+<div id="menuHUD">
+  <div id="nameWrap">
+    <label>come ti chiami?</label>
+    <input id="nameInput" maxlength="14" spellcheck="false" autocomplete="off" placeholder="ospite" />
+  </div>
+  <div id="menuHint"></div>
+</div>
+
+<div id="lobbyTag" class="hidden"></div>
+
+<div id="netPanel" class="hidden">
+  <div class="np-inner">
+    <div class="np-title">RE DI CUORI · <em>MULTIPLAYER</em></div>
+    <div class="np-sub">sei posti · un banco a sorte · fino all'ultimo vivo</div>
+    <button id="npCreate">CREA STANZA</button>
+    <div id="npJoinRow">
+      <input id="npCode" maxlength="4" spellcheck="false" autocomplete="off" placeholder="CODICE" />
+      <button id="npJoin">ENTRA</button>
+    </div>
+    <div id="npStatus"></div>
+    <button id="npClose">annulla</button>
+  </div>
+</div>
+
+<div id="chat">
+  <div id="chatLog"></div>
+  <input id="chatInput" maxlength="120" spellcheck="false" autocomplete="off" placeholder="scrivi e premi invio…" />
+</div>
+<div id="chatHint" style="display:none">tab — chat</div>
+
+<div id="winScreen" class="screen hidden">
+  <div class="w-inner">
+    <div class="w-kicker">fine partita</div>
+    <div class="w-name" id="winName"></div>
+    <div class="w-sub" id="winSub"></div>
+    <div class="w-stats" id="winStats"></div>
+    <div class="w-btns">
+      <button id="btnRematch">RIVINCITA</button>
+      <button id="btnChange" class="ghostbtn">TORNA AL TAVOLO</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   VENTUNO — 0.8
+   Fix: startMatchMP finalmente parte (flag dedicato) · banco
+   estratto a sorte all'avvio con annuncio · 6° giocatore in
+   lobby in piedi a lato (non al posto del banco) · asso bloccato
+   in stanza · niente più slot duplicati · CSS corretto.
+   ============================================================ */
+
+addEventListener('error', ev=>{
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:10px;left:10px;z-index:99;background:#3a0d10;color:#ff9b9b;'+
+    'font:11px/1.6 monospace;padding:8px 12px;max-width:60vw;border:1px solid #7a2e33;white-space:pre-wrap';
+  d.textContent = 'ERRORE SCRIPT:\n' + (ev.message || 'errore sconosciuto');
+  document.body.appendChild(d);
+});
+
+const TABLE_Y = 0.816;
+const d2r = Math.PI/180;
+const CIRC_C   = new THREE.Vector3(0, 0, -0.10);
+const FELT_R   = 0.97;
+const PLAYER_PHIS = [-70, -35, 0, 35, 70].map(d=>d*d2r);
+const CENTER_SLOT = 2;
+const SEAT_R   = 1.42;
+const BANKER_POS = new THREE.Vector3(0, 0, -0.92);
+const SIDE_POS = new THREE.Vector3(1.35, 0, -0.30);   // 6° giocatore in lobby: in piedi a lato
+const MIN_BET  = 50;
+
+// ---------- renderer / scena / camera ----------
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.18;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060403);
+scene.fog = new THREE.FogExp2(0x060403, 0.12);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.05, 30);
+scene.add(camera);
+
+let BASE_YAW = 0, BASE_PITCH = -0.26;
+const camBase = new THREE.Vector3();
+let targetYaw = 0, targetPitch = 0, yaw = 0, pitch = 0;
+
+function applyCameraRole(slot){
+  if (slot === 'side'){
+    camBase.set(SIDE_POS.x, 1.17, SIDE_POS.z);
+    BASE_YAW = Math.atan2(SIDE_POS.x - CIRC_C.x, SIDE_POS.z - CIRC_C.z);
+    BASE_PITCH = -0.32;
+  } else if (slot === 5){
+    camBase.set(BANKER_POS.x, 1.17, BANKER_POS.z);
+    BASE_YAW = Math.PI;
+    BASE_PITCH = -0.30;
+  } else {
+    const phi = PLAYER_PHIS[slot] ?? 0;
+    camBase.set(CIRC_C.x + Math.sin(phi)*SEAT_R, 1.16, CIRC_C.z + Math.cos(phi)*SEAT_R);
+    BASE_YAW = phi;
+    BASE_PITCH = -0.26;
+  }
+  yaw = targetYaw = BASE_YAW;
+  pitch = targetPitch = BASE_PITCH;
+  camera.position.copy(camBase);
+}
+
+// ---------- texture base ----------
+function canvasTexture(w, h, draw){
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const floorTex = canvasTexture(512, 512, (ctx,w,h)=>{
+  ctx.fillStyle = '#171009'; ctx.fillRect(0,0,w,h);
+  const rows = 8;
+  for (let i=0;i<rows;i++){
+    const y = i*(h/rows); let x = (i%2)*70;
+    while (x < w){
+      const pw = 130 + Math.random()*160, s = 12 + Math.random()*10;
+      ctx.fillStyle = `rgb(${s+16},${s+7},${s})`;
+      ctx.fillRect(x, y, pw-3, h/rows-3);
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+      for (let g=0; g<4; g++){
+        const gy = y + 3 + Math.random()*(h/rows-6);
+        ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x+pw-3, gy+(Math.random()-0.5)*4); ctx.stroke();
+      }
+      x += pw;
+    }
+  }
+});
+floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(4,4);
+const brickTex = canvasTexture(512, 512, (ctx,w,h)=>{
+  ctx.fillStyle = '#130d09'; ctx.fillRect(0,0,w,h);
+  const bw = 92, bh = 40;
+  for (let r=0; r*bh < h; r++){
+    const off = (r%2)*(bw/2);
+    for (let c=-1; c*bw < w+bw; c++){
+      const x = c*bw+off, y = r*bh, v = Math.random();
+      ctx.fillStyle = `rgb(${32+v*20},${21+v*13},${15+v*9})`;
+      ctx.fillRect(x+2, y+2, bw-4, bh-4);
+      if (Math.random() < 0.25){
+        ctx.fillStyle = 'rgba(10,8,6,0.5)';
+        ctx.fillRect(x+2, y+2+(Math.random()*(bh-8)), bw-4, 3+Math.random()*6);
+      }
+    }
+  }
+});
+brickTex.wrapS = brickTex.wrapT = THREE.RepeatWrapping; brickTex.repeat.set(14, 2);
+const puffTex = canvasTexture(64, 64, (ctx)=>{
+  const g = ctx.createRadialGradient(32,32,2, 32,32,30);
+  g.addColorStop(0,'rgba(255,250,240,0.85)');
+  g.addColorStop(1,'rgba(255,250,240,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+});
+
+// ---------- CARTE ----------
+const SUIT_TXT = ['♥','♦','♠','♣'];
+const RANK_TXT = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const cardFaceCanvases = {};
+function cardFaceCanvas(r, s){
+  const key = r+'-'+s;
+  if (cardFaceCanvases[key]) return cardFaceCanvases[key];
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 384;
+  const ctx = c.getContext('2d');
+  const col = (s===0 || s===1) ? '#a02028' : '#17130f';
+  ctx.fillStyle = '#e9e2cf'; ctx.fillRect(0,0,256,384);
+  ctx.strokeStyle = 'rgba(23,19,15,0.25)'; ctx.lineWidth = 4;
+  ctx.strokeRect(6,6,244,372);
+  ctx.fillStyle = col;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const corner = (x, y, rot)=>{
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rot);
+    ctx.font = '700 52px Georgia, serif'; ctx.fillText(RANK_TXT[r], 0, 0);
+    ctx.font = '600 36px Georgia, serif'; ctx.fillText(SUIT_TXT[s], 0, 42);
+    ctx.restore();
+  };
+  corner(38, 44, 0); corner(218, 340, Math.PI);
+  if (r === 0){ ctx.font = '600 190px Georgia, serif'; ctx.fillText(SUIT_TXT[s], 128, 200); }
+  else if (r >= 10){
+    ctx.font = '700 150px Georgia, serif'; ctx.fillText(RANK_TXT[r], 128, 176);
+    ctx.font = '600 54px Georgia, serif'; ctx.fillText(SUIT_TXT[s], 128, 272);
+  } else { ctx.font = '600 130px Georgia, serif'; ctx.fillText(SUIT_TXT[s], 128, 192); }
+  cardFaceCanvases[key] = c;
+  return c;
+}
+const cardBackTex = canvasTexture(256, 384, (ctx,w,h)=>{
+  ctx.fillStyle = '#571a1f'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle = '#e9e2cf'; ctx.lineWidth = 8;
+  ctx.strokeRect(12,12,w-24,h-24);
+  ctx.strokeStyle = 'rgba(233,226,207,0.28)'; ctx.lineWidth = 2;
+  for (let i=-h; i<w+h; i+=16){
+    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i+h,h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i,h); ctx.lineTo(i+h,0); ctx.stroke();
+  }
+  ctx.fillStyle = '#571a1f';
+  ctx.beginPath(); ctx.arc(128,192,46,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#e9e2cf'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(128,192,46,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = '#e9e2cf';
+  ctx.font = "400 52px 'Bebas Neue', 'Arial Narrow', sans-serif";
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('VENTUNO', 128, 174);
+  ctx.font = "400 26px 'Bebas Neue', 'Arial Narrow', sans-serif";
+  ctx.fillText('CANTINA', 128, 212);
+});
+const cardFaceMats = {};
+function cardFaceMat(r, s){
+  const key = r+'-'+s;
+  if (!cardFaceMats[key]){
+    const t = new THREE.CanvasTexture(cardFaceCanvas(r, s));
+    t.colorSpace = THREE.SRGBColorSpace;
+    cardFaceMats[key] = new THREE.MeshStandardMaterial({ map:t, roughness:0.6 });
+  }
+  return cardFaceMats[key];
+}
+const cardBackMat = new THREE.MeshStandardMaterial({ map:cardBackTex, roughness:0.6 });
+const cardPlaneGeo = new THREE.PlaneGeometry(0.072, 0.104);
+function makeCardMesh(rank, suit){
+  const outer = new THREE.Group();
+  const flipG = new THREE.Group();
+  outer.add(flipG);
+  const face = new THREE.Mesh(cardPlaneGeo, cardFaceMat(rank, suit));
+  face.rotation.x = -Math.PI/2; face.position.y = 0.001; face.castShadow = true;
+  const back = new THREE.Mesh(cardPlaneGeo, cardBackMat);
+  back.rotation.x = Math.PI/2; back.position.y = -0.001; back.castShadow = true;
+  flipG.add(face, back);
+  flipG.rotation.x = Math.PI;
+  return { outer, flipG, rank, suit, hole:false };
+}
+
+// ---------- FICHES ----------
+const CHIP_DEFS = { 5:'#a03030', 25:'#2e6b4f', 100:'#21211f', 500:'#5a3a6e' };
+const chipMats = {};
+function chipMatsFor(v){
+  if (chipMats[v]) return chipMats[v];
+  const base = CHIP_DEFS[v];
+  const top = canvasTexture(128, 128, (ctx)=>{
+    ctx.fillStyle = base; ctx.fillRect(0,0,128,128);
+    ctx.fillStyle = '#e9e2cf';
+    for (let i=0;i<8;i++){
+      ctx.save(); ctx.translate(64,64); ctx.rotate(i/8*Math.PI*2);
+      ctx.fillRect(-7, -64, 14, 16); ctx.restore();
+    }
+    ctx.strokeStyle = '#e9e2cf'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(64,64,38,0,Math.PI*2); ctx.stroke();
+    ctx.font = '700 44px Georgia, serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(v), 64, 66);
+  });
+  const side = canvasTexture(256, 32, (ctx,w,h)=>{
+    ctx.fillStyle = base; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#e9e2cf';
+    for (let i=0;i<8;i++) ctx.fillRect(i*32+8, 0, 14, h);
+  });
+  chipMats[v] = [new THREE.MeshStandardMaterial({ map:side, roughness:0.55 }),
+                 new THREE.MeshStandardMaterial({ map:top, roughness:0.55 }),
+                 new THREE.MeshStandardMaterial({ map:top, roughness:0.55 })];
+  return chipMats[v];
+}
+const chipGeo = new THREE.CylinderGeometry(0.021, 0.021, 0.006, 24);
+function chipMesh(v){
+  const m = new THREE.Mesh(chipGeo, chipMatsFor(v));
+  m.castShadow = true;
+  return m;
+}
+function moneyToChips(money){
+  const out = []; let v = money;
+  if (v >= 500){ out.push(500); v -= 500; }
+  while (v >= 100){ out.push(100); v -= 100; }
+  while (v >= 25){ out.push(25); v -= 25; }
+  while (v >= 5){ out.push(5); v -= 5; }
+  return out;
+}
+function buildStack(chips, pos){
+  const g = new THREE.Group();
+  g.position.copy(pos);
+  chips.forEach((v, i)=>{
+    const m = chipMesh(v);
+    m.position.set((Math.random()-0.5)*0.004, 0.003 + i*0.0066, (Math.random()-0.5)*0.004);
+    m.rotation.y = Math.random()*Math.PI*2;
+    g.add(m);
+  });
+  scene.add(g);
+  return g;
+}
+function removeStack(g){ if (g) scene.remove(g); }
+async function slideStack(g, from, to, lift=0.12){
+  if (!g) return;
+  await tweenP(0.42, k=>{
+    g.position.lerpVectors(from, to, k);
+    g.position.y = to.y + Math.sin(k*Math.PI)*lift;
+  });
+}
+
+// ---------- TAVOLO ----------
+const woodDark = new THREE.MeshStandardMaterial({ color:0x241610, roughness:0.75 });
+{
+  const s = new THREE.Shape();
+  s.absarc(0, 0.10, 1.06, 158*d2r, 382*d2r, false);
+  s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth:0.07, bevelEnabled:false, curveSegments:64 });
+  g.rotateX(-Math.PI/2);
+  const wood = new THREE.Mesh(g, woodDark);
+  wood.position.y = 0.740;
+  wood.castShadow = wood.receiveShadow = true;
+  scene.add(wood);
+}
+const feltGeo = (()=>{
+  const s = new THREE.Shape();
+  s.absarc(0, 0.10, FELT_R, 158*d2r, 382*d2r, false);
+  s.closePath();
+  const g = new THREE.ShapeGeometry(s, 64);
+  g.rotateX(-Math.PI/2);
+  g.computeBoundingBox();
+  const bb = g.boundingBox;
+  const sx = bb.max.x - bb.min.x, sz = bb.max.z - bb.min.z;
+  const pos = g.attributes.position, uv = g.attributes.uv;
+  for (let i=0;i<pos.count;i++){
+    uv.setXY(i, (pos.getX(i)-bb.min.x)/sx, 1 - (pos.getZ(i)-bb.min.z)/sz);
+  }
+  return g;
+})();
+const FB = feltGeo.boundingBox;
+const FSX = FB.max.x - FB.min.x, FSZ = FB.max.z - FB.min.z;
+const FW = 1024, FH = Math.round(FW * FSZ / FSX);
+const PPU = FW / FSX;
+const W2CX = wx => (wx - FB.min.x) * PPU;
+const W2CY = wz => (wz - FB.min.z) * PPU;
+const feltCanvas = document.createElement('canvas');
+feltCanvas.width = FW; feltCanvas.height = FH;
+function arcText(ctx, txt, cx, cy, r, spread, font, color){
+  ctx.font = font; ctx.fillStyle = color;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const n = txt.length;
+  const a0 = Math.PI/2 + spread, a1 = Math.PI/2 - spread;
+  for (let i=0;i<n;i++){
+    const a = a0 + (a1-a0)*(n===1 ? .5 : i/(n-1));
+    ctx.save();
+    ctx.translate(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+    ctx.rotate(a - Math.PI/2);
+    ctx.fillText(txt[i], 0, 0);
+    ctx.restore();
+  }
+}
+function drawFelt(){
+  const ctx = feltCanvas.getContext('2d');
+  const cx = W2CX(CIRC_C.x), cy = W2CY(CIRC_C.z);
+  ctx.clearRect(0,0,FW,FH);
+  ctx.fillStyle = '#1e5038';
+  ctx.fillRect(0,0,FW,FH);
+  for (let i=0;i<9000;i++){
+    ctx.fillStyle = Math.random()<.5 ? 'rgba(0,0,0,0.10)' : 'rgba(210,255,225,0.045)';
+    ctx.fillRect(Math.random()*FW, Math.random()*FH, 1.6, 1.6);
+  }
+  const vg = ctx.createRadialGradient(cx,cy,220, cx,cy,620);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.42)');
+  ctx.fillStyle = vg; ctx.fillRect(0,0,FW,FH);
+  ctx.strokeStyle = 'rgba(226,216,192,0.6)'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.arc(cx, cy, (FELT_R-0.055)*PPU, Math.PI/2-1.90, Math.PI/2+1.90); ctx.stroke();
+  ctx.strokeStyle = 'rgba(226,216,192,0.28)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, (FELT_R-0.105)*PPU, Math.PI/2-1.92, Math.PI/2+1.92); ctx.stroke();
+  arcText(ctx, 'IL VENTUNO PAGA 3 A 2', cx, cy, 0.27*PPU, 0.95,
+    "400 34px 'Bebas Neue', 'Arial Narrow', sans-serif", 'rgba(226,216,192,0.68)');
+  arcText(ctx, 'IL BANCO SERVE A 17', cx, cy, 0.195*PPU, 0.60,
+    "400 21px 'Bebas Neue', 'Arial Narrow', sans-serif", 'rgba(226,216,192,0.42)');
+  ctx.fillStyle = 'rgba(226,216,192,0.10)';
+  ctx.font = '400 92px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('♠', cx, cy - 0.02*PPU);
+  PLAYER_PHIS.forEach(phi=>{
+    const px = W2CX(CIRC_C.x + Math.sin(phi)*0.66);
+    const py = W2CY(CIRC_C.z + Math.cos(phi)*0.66);
+    ctx.strokeStyle = 'rgba(226,216,192,0.62)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(px, py, 0.052*PPU, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(226,216,192,0.22)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, 0.062*PPU, 0, Math.PI*2); ctx.stroke();
+  });
+}
+drawFelt();
+const feltTex = new THREE.CanvasTexture(feltCanvas);
+feltTex.colorSpace = THREE.SRGBColorSpace;
+document.fonts.ready.then(()=>{ drawFelt(); feltTex.needsUpdate = true; });
+{
+  const feltMesh = new THREE.Mesh(feltGeo, new THREE.MeshStandardMaterial({ map:feltTex, roughness:1 }));
+  feltMesh.position.y = TABLE_Y + 0.0005;
+  feltMesh.receiveShadow = true;
+  scene.add(feltMesh);
+}
+const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.72, 12), woodDark);
+pedestal.position.set(0, 0.36, 0.0);
+const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.05, 24), woodDark);
+foot.position.set(0, 0.025, 0.0);
+pedestal.castShadow = foot.castShadow = true;
+scene.add(pedestal, foot);
+
+const shoePos = new THREE.Vector3(-0.55, TABLE_Y + 0.02, -0.38);
+const discardPos = new THREE.Vector3(0.55, TABLE_Y + 0.006, -0.38);
+const discardGroup = new THREE.Group();
+discardGroup.position.copy(discardPos);
+scene.add(discardGroup);
+let discardCount = 0;
+{
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.045, 0.075),
+    new THREE.MeshStandardMaterial({ color:0x17130f, roughness:0.5 }));
+  base.position.y = 0.022; base.castShadow = true;
+  g.add(base);
+  for (let i=0;i<4;i++){
+    const card = new THREE.Mesh(cardPlaneGeo, cardBackMat);
+    card.rotation.x = -Math.PI/2;
+    card.position.set((Math.random()-0.5)*0.012, 0.048 + i*0.0018, (Math.random()-0.5)*0.012);
+    card.rotation.z = (Math.random()-0.5)*0.1;
+    g.add(card);
+  }
+  g.position.copy(shoePos);
+  scene.add(g);
+}
+function addDiscards(n){
+  for (let i=0;i<n;i++){
+    if (discardCount >= 30) return;
+    const card = new THREE.Mesh(cardPlaneGeo, cardBackMat);
+    card.rotation.x = -Math.PI/2;
+    card.rotation.z = (Math.random()-0.5)*0.22;
+    card.position.set((Math.random()-0.5)*0.014, 0.003 + discardCount*0.0018, (Math.random()-0.5)*0.014);
+    discardGroup.add(card);
+    discardCount++;
+  }
+}
+
+// ---------- stanza ----------
+const floor = new THREE.Mesh(new THREE.CircleGeometry(4.7, 48),
+  new THREE.MeshStandardMaterial({ map:floorTex, roughness:0.9 }));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
+scene.add(floor);
+const walls = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 3.4, 48, 1, true),
+  new THREE.MeshStandardMaterial({ map:brickTex, roughness:0.95, side:THREE.BackSide }));
+walls.position.y = 1.7; walls.receiveShadow = true;
+scene.add(walls);
+const ceiling = new THREE.Mesh(new THREE.CircleGeometry(4.7, 48),
+  new THREE.MeshStandardMaterial({ color:0x0b0908, roughness:1 }));
+ceiling.rotation.x = Math.PI/2; ceiling.position.y = 3.2;
+scene.add(ceiling);
+const crateWood = new THREE.MeshStandardMaterial({ color:0x2a1c12, roughness:0.9 });
+const crate1 = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.5, 0.55), crateWood);
+crate1.position.set(-2.3, 0.25, -2.5); crate1.rotation.y = 0.1;
+const crate2 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.4, 0.48), crateWood);
+crate2.position.set(-2.2, 0.7, -2.4); crate2.rotation.y = 0.45;
+const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.3, 0.78, 12), crateWood);
+barrel.position.set(2.6, 0.39, -1.6);
+[crate1, crate2, barrel].forEach(m=>{ m.castShadow = m.receiveShadow = true; scene.add(m); });
+const hoopMat = new THREE.MeshStandardMaterial({ color:0x191410, roughness:0.5, metalness:0.5 });
+[0.14, 0.62].forEach(y=>{
+  const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.325, 0.012, 6, 24), hoopMat);
+  hoop.rotation.x = Math.PI/2; hoop.position.set(2.6, y, -1.6);
+  scene.add(hoop);
+});
+
+// ---------- luci ----------
+const ambient = new THREE.AmbientLight(0x2a2633, 0.95);
+scene.add(ambient);
+const rim = new THREE.DirectionalLight(0x35405c, 0.8);
+rim.position.set(-2.5, 3.0, -3.5);
+scene.add(rim);
+const lampGroup = new THREE.Group();
+lampGroup.position.set(0, 3.2, 0);
+scene.add(lampGroup);
+const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1.25, 6),
+  new THREE.MeshStandardMaterial({ color:0x0d0b09, roughness:0.9 }));
+cord.position.y = -0.625; lampGroup.add(cord);
+const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.16, 0.13, 20, 1, true),
+  new THREE.MeshStandardMaterial({ color:0x1d2b23, roughness:0.4, metalness:0.6, side:THREE.DoubleSide }));
+shade.position.y = -1.25; lampGroup.add(shade);
+const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.034, 12, 10),
+  new THREE.MeshBasicMaterial({ color:0xffe3b0 }));
+bulb.position.y = -1.29; lampGroup.add(bulb);
+const spot = new THREE.SpotLight(0xffc78e, 46, 0, 0.95, 0.62, 2);
+spot.position.set(0, -1.24, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(2048, 2048);
+spot.shadow.camera.near = 0.4;
+spot.shadow.camera.far = 8;
+spot.shadow.bias = -0.0015;
+spot.shadow.normalBias = 0.02;
+spot.target.position.set(0, -2.6, 0.1);
+lampGroup.add(spot, spot.target);
+const winnerSpot = new THREE.SpotLight(0xffd9ad, 0, 3.5, 0.55, 0.6, 2);
+scene.add(winnerSpot);
+const winnerTarget = new THREE.Object3D();
+scene.add(winnerTarget);
+winnerSpot.target = winnerTarget;
+function restoreLights(){
+  spot.intensity = 46; ambient.intensity = 0.95; rim.intensity = 0.8;
+  winnerSpot.intensity = 0;
+}
+
+// ---------- sedie ----------
+function makeChair(){
+  const g = new THREE.Group();
+  const add = m=>{ m.castShadow = true; g.add(m); return m; };
+  [[-.19,-.19],[.19,-.19],[-.19,.19],[.19,.19]].forEach(([x,z])=>{
+    const leg = add(new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.017, 0.46, 8), woodDark));
+    leg.position.set(x, 0.23, z);
+  });
+  const seat = add(new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.045, 0.44), woodDark));
+  seat.position.y = 0.465; seat.receiveShadow = true;
+  [[-.19],[.19]].forEach(([x])=>{
+    const post = add(new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.015, 0.52, 8), woodDark));
+    post.position.set(x, 0.72, -0.21); post.rotation.x = -0.09;
+  });
+  const rail1 = add(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.075, 0.028), woodDark));
+  rail1.position.set(0, 0.93, -0.248);
+  const rail2 = add(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.05, 0.024), woodDark));
+  rail2.position.set(0, 0.75, -0.228);
+  return g;
+}
+PLAYER_PHIS.forEach(phi=>{
+  const ch = makeChair();
+  ch.position.set(CIRC_C.x + Math.sin(phi)*SEAT_R, 0, CIRC_C.z + Math.cos(phi)*SEAT_R);
+  ch.rotation.y = phi + Math.PI;
+  scene.add(ch);
+});
+
+// ---------- helper ----------
+const _up = new THREE.Vector3(0,1,0);
+const _lD = new THREE.Vector3();
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+function makeLimbUnit(r, mat){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r*0.88, 1, 10), mat);
+  m.castShadow = true;
+  return m;
+}
+function setLimb(mesh, a, b){
+  _lD.subVectors(b, a);
+  const len = Math.max(0.01, _lD.length());
+  mesh.position.copy(a).addScaledVector(_lD, 0.5);
+  mesh.quaternion.setFromUnitVectors(_up, _lD.normalize());
+  mesh.scale.set(1, len, 1);
+}
+const tweens = [];
+const easeInOut = k => k < .5 ? 2*k*k : 1 - Math.pow(-2*k+2, 2)/2;
+function tweenVal(dur, fn){ tweens.push({ t:0, dur, fn, ease:easeInOut }); }
+function updateTweens(dt){
+  for (let i=tweens.length-1; i>=0; i--){
+    const tw = tweens[i];
+    tw.t += dt;
+    const k = Math.min(1, tw.t/tw.dur);
+    tw.fn(tw.ease(k));
+    if (k >= 1) tweens.splice(i, 1);
+  }
+}
+const ABORT = Symbol('abort');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function step(ms, tk){
+  await sleep(ms);
+  if (tk !== matchToken) throw ABORT;
+}
+function tweenP(dur, fn){
+  return new Promise(res=>{
+    let done = false;
+    tweenVal(dur, k=>{ fn(k); if (k>=1 && !done){ done = true; res(); } });
+  });
+}
+
+// ---------- sprite ----------
+function makeTag(name){
+  const c = document.createElement('canvas'); c.width = 512; c.height = 110;
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false }));
+  sp.scale.set(0.52, 0.112, 1);
+  sp.renderOrder = 20;
+  const txt = name.toUpperCase();
+  function redraw(alive){
+    ctx.clearRect(0,0,512,110);
+    ctx.font = '400 58px "Bebas Neue", "Arial Narrow", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(5,3,2,0.85)';
+    ctx.strokeText(txt, 256, 55);
+    ctx.fillStyle = alive ? '#ece2cf' : '#6f6555';
+    ctx.fillText(txt, 256, 55);
+    tex.needsUpdate = true;
+  }
+  redraw(true);
+  return { sprite: sp, redraw };
+}
+function makeMoneySprite(isBank){
+  const c = document.createElement('canvas'); c.width = 320; c.height = 110;
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false, opacity:0.96 }));
+  sp.scale.set(0.21, 0.072, 1);
+  sp.renderOrder = 21;
+  function redraw(money, alive){
+    ctx.clearRect(0,0,320,110);
+    ctx.font = "600 44px 'IBM Plex Mono', monospace";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(5,3,2,0.9)';
+    const txt = (isBank ? 'BANCO € ' : '€ ') + money;
+    ctx.strokeText(txt, 160, 55);
+    ctx.fillStyle = alive ? '#d9b96a' : '#7a2e33';
+    ctx.fillText(txt, 160, 55);
+    tex.needsUpdate = true;
+  }
+  redraw(1000, true);
+  return { sprite: sp, redraw };
+}
+function makeValueSprite(){
+  const c = document.createElement('canvas'); c.width = 256; c.height = 96;
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false, opacity:0.95 }));
+  sp.scale.set(0.17, 0.064, 1);
+  sp.renderOrder = 21;
+  function redraw(txt, color){
+    ctx.clearRect(0,0,256,96);
+    ctx.font = '400 58px "Bebas Neue", "Arial Narrow", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(5,3,2,0.9)';
+    ctx.strokeText(txt, 128, 48);
+    ctx.fillStyle = color;
+    ctx.fillText(txt, 128, 48);
+    tex.needsUpdate = true;
+  }
+  return { sprite: sp, redraw };
+}
+function makeLabelSprite(){
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+  const ctx = c.getContext('2d');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false, opacity:0.95 }));
+  sp.scale.set(0.34, 0.064, 1);
+  sp.renderOrder = 21;
+  function redraw(txt, hot){
+    ctx.clearRect(0,0,512,96);
+    ctx.font = '400 38px "Bebas Neue", "Arial Narrow", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(5,3,2,0.92)';
+    ctx.strokeText(txt, 256, 48);
+    ctx.fillStyle = hot ? '#e8888e' : '#e3dac8';
+    ctx.fillText(txt, 256, 48);
+    tex.needsUpdate = true;
+  }
+  return { sprite: sp, redraw };
+}
+
+// ---------- personaggi ----------
+const LOOKS = [
+  {x: 0.32, y:  0   }, {x: 0.26, y:  0.3}, {x: 0.26, y: -0.3},
+  {x: 0.05, y:  0.6 }, {x: 0.05, y: -0.6 },
+  {x:-0.05, y:  0.15}, {x: 0.02, y: -0.2}
+];
+const _v3 = new THREE.Vector3();
+function makeBot(cfg){
+  const g = new THREE.Group();
+  g.position.copy(cfg.pos);
+  g.rotation.y = (cfg.rotY !== undefined) ? cfg.rotY
+    : Math.atan2(cfg.pos.x - CIRC_C.x, cfg.pos.z - CIRC_C.z) + Math.PI;
+
+  const body = new THREE.Group();
+  g.add(body);
+  const jacketM = new THREE.MeshStandardMaterial({ color:cfg.jacket, roughness:0.92, flatShading:true });
+  const pantsM  = new THREE.MeshStandardMaterial({ color:cfg.pants || 0x24211d, roughness:0.95 });
+  const skinM   = new THREE.MeshStandardMaterial({ color:cfg.skin,   roughness:0.88, flatShading:true });
+  const darkM   = new THREE.MeshStandardMaterial({ color:0x151210,   roughness:0.9 });
+  const eyeM    = new THREE.MeshStandardMaterial({ color:0x0a0806, roughness:0.4 });
+  const add = m=>{ m.castShadow = true; body.add(m); return m; };
+
+  if (cfg.standing){
+    [-0.075, 0.075].forEach(x=>{
+      const thigh = add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.14), pantsM));
+      thigh.position.set(x, 0.72, 0);
+      const shin = add(new THREE.Mesh(new THREE.BoxGeometry(0.115, 0.58, 0.115), pantsM));
+      shin.position.set(x, 0.30, 0.01);
+    });
+  } else {
+    const thigh = add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.11, 0.34), pantsM));
+    thigh.position.set(0, 0.54, 0.10);
+    const shin = add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.36, 0.13), pantsM));
+    shin.position.set(0, 0.26, 0.24);
+  }
+
+  const torsoY = cfg.standing ? 1.12 : 0.73;
+  const torso = add(new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.21, 0.46, 12), jacketM));
+  torso.position.y = torsoY;
+  const collar = add(new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.08, 0.06, 10), darkM));
+  collar.position.set(0, torsoY + 0.24, 0.01);
+  [[-0.165],[0.165]].forEach(([x])=>{
+    const s = add(new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), jacketM));
+    s.position.set(x, torsoY + 0.185, 0.01);
+  });
+  if (cfg.standing){
+    const bowM = new THREE.MeshStandardMaterial({ color:0x7a1f26, roughness:0.7 });
+    [[-1],[1]].forEach(([s])=>{
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.018, 0.008), bowM);
+      wing.position.set(s*0.017, torsoY + 0.235, 0.075);
+      wing.rotation.y = s*0.35;
+      body.add(wing);
+    });
+    const knot = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.014, 0.01), bowM);
+    knot.position.set(0, torsoY + 0.235, 0.082);
+    body.add(knot);
+  }
+  const head = new THREE.Group();
+  head.position.set(0, torsoY + 0.315, 0.02);
+  body.add(head);
+  const skull = new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 1), skinM);
+  skull.castShadow = true; head.add(skull);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.05, 6), skinM);
+  nose.rotation.x = Math.PI/2; nose.position.set(0, 0, 0.1); head.add(nose);
+  [[-0.037],[0.037]].forEach(([x])=>{
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 6), eyeM);
+    e.position.set(x, 0.018, 0.086); head.add(e);
+  });
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.034, 0.009, 0.012), eyeM);
+  mouth.position.set(0.012, -0.046, 0.084); head.add(mouth);
+
+  if (cfg.hat === 'fedora'){
+    const hM = new THREE.MeshStandardMaterial({ color:0x26190f, roughness:0.85 });
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.135, 0.135, 0.012, 18), hM);
+    brim.position.set(0, 0.075, 0); brim.castShadow = true; head.add(brim);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.088, 0.075, 18), hM);
+    crown.position.set(0, 0.115, 0); crown.castShadow = true; head.add(crown);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.016, 18),
+      new THREE.MeshStandardMaterial({ color:0x5c1d1d, roughness:0.7 }));
+    band.position.set(0, 0.088, 0); head.add(band);
+  }
+  if (cfg.hat === 'cap'){
+    const cM = new THREE.MeshStandardMaterial({ color:0x232b22, roughness:0.9 });
+    const bM = new THREE.MeshStandardMaterial({ color:0x171c15, roughness:0.95 });
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.112, 14, 8, 0, Math.PI*2, 0, Math.PI/2.9), cM);
+    dome.position.set(0, 0.0125, -0.008); dome.castShadow = true; head.add(dome);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.101, 0.101, 0.026, 20, 1, true), bM);
+    band.position.set(0, 0.055, -0.008); head.add(band);
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.086, 0.006, 0.05), bM);
+    visor.position.set(0, 0.058, 0.104); visor.rotation.x = -0.16; head.add(visor);
+  }
+  if (cfg.hat === 'hair' || cfg.hat === 'longhair'){
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.106, 10, 6, 0, Math.PI*2, 0, Math.PI/2.5),
+      new THREE.MeshStandardMaterial({ color:0x241b12, roughness:0.95 }));
+    hair.position.set(0, 0.032, -0.02); hair.castShadow = true; head.add(hair);
+    if (cfg.hat === 'longhair'){
+      const back = new THREE.Mesh(new THREE.SphereGeometry(0.088, 10, 6, 0, Math.PI*2, Math.PI/2.5, Math.PI/2.2),
+        new THREE.MeshStandardMaterial({ color:0x241b12, roughness:0.95 }));
+      back.position.set(0, -0.01, -0.025);
+      head.add(back);
+    }
+  }
+  if (cfg.mustache){
+    const mo = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.02, 0.018),
+      new THREE.MeshStandardMaterial({ color:0x2a1c12, roughness:0.9 }));
+    mo.position.set(0, -0.032, 0.096); head.add(mo);
+  }
+  if (cfg.glasses){
+    const gM = new THREE.MeshStandardMaterial({ color:0x151515, metalness:0.7, roughness:0.35 });
+    [[-0.036],[0.036]].forEach(([x])=>{
+      const lens = new THREE.Mesh(new THREE.TorusGeometry(0.023, 0.0035, 6, 16), gM);
+      lens.position.set(x, 0.015, 0.092); head.add(lens);
+    });
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.004, 0.004), gM);
+    bridge.position.set(0, 0.017, 0.095); head.add(bridge);
+  }
+  if (cfg.beard){
+    const beard = new THREE.Mesh(new THREE.BoxGeometry(0.106, 0.06, 0.084),
+      new THREE.MeshStandardMaterial({ color:0x241b12, roughness:0.95 }));
+    beard.position.set(0, -0.058, 0.038); head.add(beard);
+  }
+  let ember = null;
+  if (cfg.smokes){
+    const cig = new THREE.Group();
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.0042, 0.0042, 0.062, 8),
+      new THREE.MeshStandardMaterial({ color:0xe4ded0, roughness:0.8 }));
+    stick.position.y = 0.053;
+    const filter = new THREE.Mesh(new THREE.CylinderGeometry(0.0048, 0.0048, 0.022, 8),
+      new THREE.MeshStandardMaterial({ color:0xd8a24a, roughness:0.8 }));
+    filter.position.y = 0.011;
+    ember = new THREE.Mesh(new THREE.SphereGeometry(0.0055, 8, 6),
+      new THREE.MeshStandardMaterial({ color:0x1a0d06, emissive:0xff4d12, emissiveIntensity:2 }));
+    ember.position.y = 0.084;
+    cig.add(stick, filter, ember);
+    cig.position.set(0.033, -0.047, 0.083);
+    cig.rotation.z = -1.05; cig.rotation.x = 0.55;
+    head.add(cig);
+  }
+  const armL = { sh:new THREE.Vector3(-0.175, torsoY+0.175, 0.03) };
+  const armR = { sh:new THREE.Vector3( 0.175, torsoY+0.175, 0.03) };
+  if (cfg.standing){
+    armL.rest = new THREE.Vector3(-0.14, 0.90, 0.46);
+    armR.rest = new THREE.Vector3( 0.14, 0.90, 0.46);
+  } else {
+    armL.rest = new THREE.Vector3(-0.12, 0.857, 0.46);
+    armR.rest = new THREE.Vector3( 0.12, 0.857, 0.46);
+  }
+  [armL, armR].forEach(a=>{
+    a.el = _v3.clone().lerpVectors(a.sh, a.rest, 0.55);
+    a.el.y -= 0.04;
+    a.upper = makeLimbUnit(0.037, jacketM); body.add(a.upper);
+    setLimb(a.upper, a.sh, a.el);
+    a.fore = makeLimbUnit(0.030, jacketM); body.add(a.fore);
+    setLimb(a.fore, a.el, a.rest);
+    a.hand = new THREE.Mesh(new THREE.SphereGeometry(0.043, 10, 8), skinM);
+    a.hand.position.copy(a.rest); a.hand.castShadow = true;
+    body.add(a.hand);
+  });
+  const tag = makeTag(cfg.name);
+  tag.sprite.position.y = torsoY + 0.52;
+  g.add(tag.sprite);
+  const st = { nextLook: 1 + Math.random()*3, lookX: 0, lookY: 0, phase: Math.random()*10, tapNext: 0, tapUntil: 0 };
+  const api = {
+    group: g, body, head, tag, ember,
+    lookPoint: null,
+    smokeT: 0.4 + Math.random(),
+    update(t, dt){
+      const br = Math.sin(t*1.4 + st.phase);
+      torso.scale.y = 1 + br*0.012;
+      head.position.y = torsoY + 0.315 + br*0.005;
+      let dy, dp;
+      if (api.lookPoint){
+        const local = body.worldToLocal(api.lookPoint.clone());
+        const d = local.sub(head.position);
+        dy = clamp(Math.atan2(d.x, d.z), -1.2, 1.2);
+        dp = clamp(-Math.atan2(d.y, Math.hypot(d.x, d.z)), -0.45, 0.6);
+      } else {
+        if (t > st.nextLook){
+          const L = LOOKS[(Math.random()*LOOKS.length)|0];
+          st.lookX = L.x; st.lookY = L.y;
+          st.nextLook = t + 2 + Math.random()*3.5;
+        }
+        dy = st.lookY; dp = st.lookX;
+      }
+      head.rotation.y += (dy - head.rotation.y) * Math.min(1, dt*3.5);
+      head.rotation.x += (dp - head.rotation.x) * Math.min(1, dt*3.5);
+      if (cfg.sway) body.rotation.x = -0.05 + Math.sin(t*0.5 + st.phase)*0.035;
+      if (cfg.tap && armR.hand){
+        if (t > st.tapNext){ st.tapUntil = t + 1.7; st.tapNext = t + 5 + Math.random()*6; }
+        armR.hand.position.y = (t < st.tapUntil) ? 0.857 + Math.max(0, Math.sin(t*15))*0.015 : 0.857;
+      }
+      if (ember) ember.material.emissiveIntensity = 1.5 + Math.sin(t*7.3)*0.5 + Math.sin(t*13.7)*0.3;
+    }
+  };
+  return api;
+}
+
+// ---------- stato ----------
+let inMenu = true, starting = false;
+let menuToken = 0, matchToken = 0;
+let gamePhase = 'idle';
+let players = [];
+let mySlot = CENTER_SLOT;
+let myLobbySlot = CENTER_SLOT;
+let endCond = null;
+let handCount = 0;
+let playerName = (localStorage.getItem('rr_name') || 'OSPITE').toUpperCase();
+let activePoint = null;
+let deck = [];
+const hands = {};
+const bankHand = { cards:[], sprite:null };
+const reserveStacks = {};
+const moneySprites = {};
+const lobbyAvatars = {};
+
+const BOT_DEFS = [
+  { name:'Dmitri',   jacket:0x5a3b26, pants:0x241b14, skin:0xd9a878, hat:'fedora',  mustache:true, sway:true,
+    ai:{ standOn:18, doubleProb:.45, splitProb:.30, betFrac:.10 } },
+  { name:'Irina',    jacket:0x5c2f38, pants:0x241b18, skin:0xe0b48a, hat:'longhair',
+    ai:{ standOn:17, doubleProb:.55, splitProb:.50, betFrac:.18 } },
+  { name:'Sasha',    jacket:0x3c4433, pants:0x1c2018, skin:0xc98f63, hat:'cap',     glasses:true, tap:true,
+    ai:{ standOn:17, doubleProb:.40, splitProb:.35, betFrac:.08 } },
+  { name:'Katarina', jacket:0x453a46, pants:0x1c1a20, skin:0xd4a276, hat:'longhair', glasses:true,
+    ai:{ standOn:17, doubleProb:.35, splitProb:.30, betFrac:.12 } },
+  { name:'Viktor',   jacket:0x3b3b42, pants:0x17181c, skin:0xe0b48a, hat:'hair',    beard:true, smokes:true,
+    ai:{ standOn:16, doubleProb:.25, splitProb:.20, betFrac:.06 } },
+  { name:'Boris',    jacket:0x2f3a44, pants:0x1c1e22, skin:0xd4a276, hat:'fedora',
+    ai:{ standOn:19, doubleProb:.15, splitProb:.10, betFrac:.05 } },
+];
+const HUMAN_LOOKS = [
+  { jacket:0x4a3f33, skin:0xd9a878 }, { jacket:0x39463c, skin:0xc98f63 },
+  { jacket:0x453a46, skin:0xe0b48a }, { jacket:0x3d4249, skin:0xd4a276 },
+  { jacket:0x54423a, skin:0xd9a878 }, { jacket:0x2f3f3a, skin:0xc98f63 },
+];
+const SEAT_COLORS = ['#c8564f','#8fa07a','#c79a5a','#7a95b5','#b58fa0','#9a8f7d'];
+
+function dirOfSlot(slot){
+  const phi = PLAYER_PHIS[slot] ?? 0;
+  return new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi));
+}
+function perpOfSlot(slot){
+  const phi = PLAYER_PHIS[slot] ?? 0;
+  return new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi));
+}
+function seatPosOf(slot){
+  const d = dirOfSlot(slot);
+  return new THREE.Vector3(CIRC_C.x + d.x*SEAT_R, 0, CIRC_C.z + d.z*SEAT_R);
+}
+/* posto di lobby: host al centro; joiner su sedie fisse; il 5°
+   joiner ('side') sta IN PIEDI A LATO del tavolo, non al banco */
+function lobbySlotOf(seat){
+  if (NET.mode === 'off' || seat === 0) return CENTER_SLOT;
+  const map = [3, 1, 4, 0, 'side'];
+  return map[(seat - 1) % 5];
+}
+function handSpot(slot, hi, i){
+  const d = dirOfSlot(slot), q = perpOfSlot(slot);
+  const n = hands[slot] ? hands[slot].length : 1;
+  const lat = (n === 1) ? 0 : (hi === 0 ? -0.065 : 0.065);
+  const base = new THREE.Vector3(CIRC_C.x, 0, CIRC_C.z).addScaledVector(d, 0.36).addScaledVector(q, lat);
+  return base.addScaledVector(q, i*0.037 - 0.018).setY(TABLE_Y + 0.006 + i*0.0016);
+}
+function betSpotOf(slot, hi){
+  const d = dirOfSlot(slot), q = perpOfSlot(slot);
+  const n = hands[slot] ? hands[slot].length : 1;
+  const lat = (n === 1) ? 0 : (hi === 0 ? -0.065 : 0.065);
+  return new THREE.Vector3(CIRC_C.x, TABLE_Y + 0.006, CIRC_C.z).addScaledVector(d, 0.66).addScaledVector(q, lat);
+}
+function reserveSpotOf(slot){
+  const d = dirOfSlot(slot), q = perpOfSlot(slot);
+  return new THREE.Vector3(CIRC_C.x, TABLE_Y + 0.004, CIRC_C.z).addScaledVector(d, 0.80).addScaledVector(q, 0.17);
+}
+const bankReserve = new THREE.Vector3(0, TABLE_Y + 0.004, -0.36);
+const payOrigin = bankReserve.clone().setY(TABLE_Y + 0.006);
+function bankCardSpotOf(i){ return new THREE.Vector3(i*0.040 - 0.020, TABLE_Y + 0.006 + i*0.0016, -0.24); }
+function bySlot(s){ return players.find(p=>p.slot === s); }
+function bankerPlayer(){ return bySlot(5); }
+
+// ---------- audio ----------
+const AudioFX = (()=>{
+  let ctx = null, master, verb, noiseBuf;
+  function init(){
+    if (ctx) { ctx.resume(); return; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 5;
+    comp.connect(ctx.destination);
+    master = ctx.createGain(); master.gain.value = 0.85;
+    master.connect(comp);
+    const sr = ctx.sampleRate, len = (sr*1.6)|0;
+    const ir = ctx.createBuffer(2, len, sr);
+    for (let ch=0; ch<2; ch++){
+      const d = ir.getChannelData(ch);
+      for (let i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len, 2.8);
+    }
+    verb = ctx.createConvolver(); verb.buffer = ir;
+    const vg = ctx.createGain(); vg.gain.value = 0.4;
+    verb.connect(vg); vg.connect(master);
+    noiseBuf = ctx.createBuffer(1, sr*2, sr);
+    const nd = noiseBuf.getChannelData(0);
+    for (let i=0;i<nd.length;i++) nd[i] = Math.random()*2-1;
+    const amb = ctx.createBufferSource(); amb.buffer = noiseBuf; amb.loop = true;
+    const af = ctx.createBiquadFilter(); af.type = 'lowpass'; af.frequency.value = 160;
+    const ag = ctx.createGain(); ag.gain.value = 0.028;
+    amb.connect(af); af.connect(ag); ag.connect(master); amb.start();
+    const hum = ctx.createOscillator(); hum.frequency.value = 100;
+    const hg = ctx.createGain(); hg.gain.value = 0.006;
+    hum.connect(hg); hg.connect(master); hum.start();
+    ctx.resume();
+  }
+  function env(g, t0, a, peak, dur){
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0+a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  }
+  function snap(){
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 3;
+    const g = ctx.createGain(); env(g, t, 0.001, 0.22, 0.07);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t); s.stop(t+0.09);
+  }
+  function flipSfx(){
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 2;
+    const g = ctx.createGain(); env(g, t, 0.01, 0.12, 0.12);
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t); s.stop(t+0.14);
+  }
+  function chip(vol=0.25, when=0){
+    if (!ctx) return;
+    const t = ctx.currentTime + when;
+    [3200, 2600].forEach((fr, i)=>{
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
+      const g = ctx.createGain(); env(g, t+i*0.03, 0.002, vol*(i?0.7:1), 0.05);
+      o.connect(g); g.connect(master);
+      o.start(t+i*0.03); o.stop(t+i*0.03+0.06);
+    });
+  }
+  function winSfx(){
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    [523, 659, 784].forEach((fr, i)=>{
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+      const g = ctx.createGain(); env(g, t+i*0.09, 0.01, 0.12, 0.3);
+      o.connect(g); g.connect(master); g.connect(verb);
+      o.start(t+i*0.09); o.stop(t+i*0.09+0.32);
+    });
+  }
+  function loseSfx(){
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator();
+    o.frequency.setValueAtTime(140, t);
+    o.frequency.exponentialRampToValueAtTime(70, t+0.2);
+    const g = ctx.createGain(); env(g, t, 0.004, 0.2, 0.25);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.28);
+  }
+  function drone(){
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    [55, 55.7, 110.3].forEach((f, i)=>{
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.12/(i+1), t+1.2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+4.5);
+      o.connect(g); g.connect(master); g.connect(verb);
+      o.start(t); o.stop(t+4.6);
+    });
+  }
+  return { init, snap, flipSfx, chip, winSfx, loseSfx, drone };
+})();
+
+// ---------- UI ----------
+const $ = id => document.getElementById(id);
+const turnTagEl = $('turnTag'), announceEl = $('announce'), logEl = $('log');
+const choiceWrap = $('choiceWrap'), optBar = $('optBar'), choiceHint = $('choiceHint');
+const menuHUD = $('menuHUD'), nameInput = $('nameInput'), menuHint = $('menuHint');
+const moneyHUDEL = $('moneyHUD');
+const lobbyTag = $('lobbyTag');
+const netPanel = $('netPanel'), npCreate = $('npCreate'), npJoin = $('npJoin'),
+      npCode = $('npCode'), npStatus = $('npStatus'), npClose = $('npClose');
+const chatEl = $('chat'), chatLog = $('chatLog'), chatInput = $('chatInput'), chatHint = $('chatHint');
+const winScreen = $('winScreen'), winName = $('winName'), winSub = $('winSub'), winStats = $('winStats');
+const btnRematch = $('btnRematch'), btnChange = $('btnChange');
+
+function log(msg, cls=''){
+  const div = document.createElement('div');
+  div.className = 'logline' + (cls ? ' '+cls : '');
+  div.textContent = msg;
+  logEl.appendChild(div);
+  while (logEl.children.length > 5) logEl.firstChild.remove();
+}
+function announce(text, ms=2200, cls=''){
+  announceEl.textContent = text;
+  announceEl.className = cls;
+  announceEl.animate(
+    [{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.8},{opacity:0}],
+    {duration:ms, easing:'ease'}
+  );
+}
+function setTurn(text, mine=false){
+  turnTagEl.textContent = text;
+  turnTagEl.classList.toggle('mine', mine);
+}
+function updateMoneyHUD(){
+  const me = players.find(p=>p.kind==='you');
+  if (!me){ moneyHUDEL.style.display = 'none'; return; }
+  moneyHUDEL.style.display = 'block';
+  const isBank = me.slot === 5;
+  moneyHUDEL.innerHTML = `€ ${me.money}<small>${isBank ? 'sei il banco' : 'il tuo denaro'}</small>`;
+}
+function note(text, cls='', ms=2200, annCls=''){
+  announce(text, ms, annCls);
+  log(text, cls);
+  bcastEv({ k:'note', text, cls, ms, annCls });
+}
+
+// ---------- scelta a tastiera ----------
+let choiceResolve = null;
+let curOptions = [];
+function askOptions(options, hint){
+  return new Promise(res=>{
+    curOptions = options;
+    optBar.innerHTML = '';
+    options.forEach(o=>{
+      const b = document.createElement('div');
+      b.className = 'obtn';
+      b.innerHTML = `<span class="key">${o.key}</span><div><b>${o.label}</b><i>${o.sub}</i></div>`;
+      optBar.appendChild(b);
+    });
+    choiceHint.textContent = hint;
+    choiceWrap.style.display = 'flex';
+    choiceResolve = v => { choiceResolve = null; choiceWrap.style.display = 'none'; res(v); };
+  });
+}
+
+// ---------- mani ----------
+function newDeck(){
+  deck = [];
+  for (let s=0;s<4;s++) for (let r=0;r<13;r++) deck.push([r,s]);
+  for (let i=deck.length-1;i>0;i--){
+    const j = (Math.random()*(i+1))|0;
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+}
+function handValue(cards){
+  let t = 0, aces = 0;
+  for (const c of cards){
+    if (c.rank === 0){ t += 11; aces++; }
+    else if (c.rank >= 10) t += 10;
+    else t += c.rank + 1;
+  }
+  while (t > 21 && aces){ t -= 10; aces--; }
+  return t;
+}
+function newHand(){ return { cards:[], bet:0, doubled:false, done:false, fromSplit:false, sprite:null, betStack:null }; }
+function attachHandSprite(slot, hi){
+  const hand = hands[slot][hi];
+  if (!hand.sprite){
+    hand.sprite = makeValueSprite();
+    scene.add(hand.sprite.sprite);
+  }
+  const b = handSpot(slot, hi, 0);
+  const d = dirOfSlot(slot);
+  hand.sprite.sprite.position.set(b.x + d.x*0.10, TABLE_Y + 0.10, b.z + d.z*0.10);
+  hand.sprite.sprite.visible = false;
+}
+function updateHandSprite(slot, hi){
+  const hand = hands[slot][hi];
+  if (!hand.sprite) return;
+  if (!hand.cards.length){ hand.sprite.sprite.visible = false; return; }
+  hand.sprite.sprite.visible = true;
+  if (hand.cards.some(c=>c.hole)){
+    const open = hand.cards.filter(c=>!c.hole);
+    hand.sprite.redraw((open.length ? handValue(open) : 0) + ' + ?', '#e3dac8');
+    return;
+  }
+  const v = handValue(hand.cards);
+  if (v > 21) hand.sprite.redraw(v + ' SBALLA', '#e8888e');
+  else if (v === 21 && hand.cards.length === 2 && !hand.fromSplit) hand.sprite.redraw('VENTUNO', '#d9b96a');
+  else hand.sprite.redraw(String(v), v >= 17 ? '#d9b96a' : '#e3dac8');
+}
+function updateBankSprite(){
+  if (!bankHand.cards.length){ if (bankHand.sprite) bankHand.sprite.sprite.visible = false; return; }
+  if (!bankHand.sprite){
+    bankHand.sprite = makeValueSprite();
+    bankHand.sprite.sprite.position.set(0, TABLE_Y + 0.10, -0.24);
+    scene.add(bankHand.sprite.sprite);
+  }
+  bankHand.sprite.sprite.visible = true;
+  if (bankHand.cards.some(c=>c.hole)){
+    const open = bankHand.cards.filter(c=>!c.hole);
+    bankHand.sprite.redraw((open.length ? handValue(open) : 0) + ' + ?', '#e3dac8');
+  } else {
+    const v = handValue(bankHand.cards);
+    bankHand.sprite.redraw(v > 21 ? v + ' SBALLA' : String(v), v > 21 ? '#e8888e' : '#d9b96a');
+  }
+}
+
+// ---------- perform condivise ----------
+async function performDeal(ev, tk){
+  const { slot, hi, r, s, up, bank, rot } = ev;
+  const c = makeCardMesh(r, s);
+  let target, rotY;
+  if (bank){
+    target = bankCardSpotOf(bankHand.cards.length);
+    rotY = Math.PI;
+    bankHand.cards.push(c);
+  } else {
+    const hand = hands[slot][hi];
+    target = handSpot(slot, hi, hand.cards.length);
+    rotY = PLAYER_PHIS[slot] ?? 0;
+    hand.cards.push(c);
+    activePoint = target.clone();
+  }
+  const from = shoePos.clone();
+  c.outer.position.copy(from);
+  c.outer.rotation.y = rotY + (Math.random()-0.5)*0.12;
+  scene.add(c.outer);
+  AudioFX.flipSfx();
+  await tweenP(0.34, k=>{
+    c.outer.position.lerpVectors(from, target, k);
+    c.outer.position.y = target.y + Math.sin(k*Math.PI)*0.18;
+  });
+  AudioFX.snap();
+  if (up){
+    await tweenP(0.2, k=>{
+      c.flipG.rotation.x = Math.PI*(1-k);
+      c.outer.position.y = target.y + Math.sin(k*Math.PI)*0.09;
+    });
+    AudioFX.flipSfx();
+  } else {
+    c.hole = true;
+  }
+  if (rot){
+    const r0 = c.outer.rotation.y;
+    await tweenP(0.2, k=>{ c.outer.rotation.y = r0 + Math.PI/2*k; });
+  }
+  if (bank) updateBankSprite();
+  else updateHandSprite(slot, hi);
+}
+async function dealTo(slot, hi, up, tk, bank=false, rot=false){
+  if (!deck.length) newDeck();
+  const [r, s] = deck.pop();
+  const ev = { k:'deal', slot, hi, r, s, up, bank, rot };
+  bcastEv(ev);
+  await performDeal(ev, tk);
+}
+async function performReveal(tk){
+  const c = bankHand.cards.find(c=>c.hole);
+  if (c){
+    const y0 = c.outer.position.y;
+    await tweenP(0.26, k=>{
+      c.flipG.rotation.x = Math.PI*(1-k);
+      c.outer.position.y = y0 + Math.sin(k*Math.PI)*0.12;
+    });
+    c.hole = false;
+    AudioFX.flipSfx();
+  }
+  updateBankSprite();
+}
+function performBet(slot, amount){
+  const p = bySlot(slot);
+  if (!p) return;
+  p.money -= amount;
+  const hand = hands[slot][0];
+  hand.bet = amount;
+  removeStack(hand.betStack);
+  hand.betStack = buildStack(moneyToChips(amount), betSpotOf(slot, 0));
+  recomposeReserves();
+  updateMoneyHUD();
+}
+async function performSplit(slot, tk){
+  const p = bySlot(slot);
+  const arr = hands[slot];
+  const h = arr[0];
+  const c2 = h.cards.pop();
+  const nh = newHand();
+  nh.fromSplit = true; h.fromSplit = true;
+  nh.bet = h.bet;
+  nh.cards.push(c2);
+  arr.push(nh);
+  p.money -= h.bet;
+  const dest = handSpot(slot, 1, 0);
+  const from = c2.outer.position.clone();
+  await tweenP(0.32, k=>{
+    c2.outer.position.lerpVectors(from, dest, k);
+    c2.outer.position.y = dest.y + Math.sin(k*Math.PI)*0.08;
+  });
+  await Promise.all(h.cards.map((c, i)=>{
+    const f = c.outer.position.clone();
+    const d = handSpot(slot, 0, i);
+    return tweenP(0.25, k=>{ c.outer.position.lerpVectors(f, d, k); });
+  }));
+  attachHandSprite(slot, 0);
+  attachHandSprite(slot, 1);
+  removeStack(h.betStack);
+  h.betStack = buildStack(moneyToChips(h.bet), betSpotOf(slot, 0));
+  nh.betStack = buildStack(moneyToChips(nh.bet), betSpotOf(slot, 1));
+  AudioFX.chip(0.3);
+  updateHandSprite(slot, 0);
+  updateHandSprite(slot, 1);
+  recomposeReserves();
+  updateMoneyHUD();
+}
+function performDoubleChips(slot, hi){
+  const p = bySlot(slot);
+  const hand = hands[slot][hi];
+  p.money -= hand.bet;
+  hand.bet *= 2;
+  hand.doubled = true;
+  removeStack(hand.betStack);
+  hand.betStack = buildStack(moneyToChips(hand.bet), betSpotOf(slot, hi));
+  AudioFX.chip(0.3);
+  recomposeReserves();
+  updateMoneyHUD();
+}
+async function performPay(slot, hi, delta, playerMoney, bankerMoney, tk){
+  const p = bySlot(slot);
+  const banker = bankerPlayer();
+  const hand = hands[slot][hi];
+  const myBet = betSpotOf(slot, hi);
+  const myRes = reserveSpotOf(slot);
+  if (delta > 0){
+    const pay = buildStack(moneyToChips(delta), payOrigin);
+    await slideStack(pay, payOrigin, myBet);
+    AudioFX.chip(0.3);
+    await sleep(150);
+    await Promise.all([
+      slideStack(pay, myBet, myRes, 0.14),
+      hand.betStack ? slideStack(hand.betStack, myBet, myRes, 0.14) : Promise.resolve()
+    ]);
+    removeStack(pay); removeStack(hand.betStack); hand.betStack = null;
+    AudioFX.winSfx();
+  } else if (delta < 0){
+    if (hand.betStack){
+      await slideStack(hand.betStack, myBet, payOrigin);
+      removeStack(hand.betStack); hand.betStack = null;
+    }
+    AudioFX.loseSfx();
+  } else {
+    if (hand.betStack){
+      await slideStack(hand.betStack, myBet, myRes, 0.1);
+      removeStack(hand.betStack); hand.betStack = null;
+    }
+    AudioFX.chip(0.2);
+  }
+  p.money = playerMoney;
+  if (banker) banker.money = bankerMoney;
+  recomposeReserves();
+  updateMoneyHUD();
+}
+async function performSweep(tk){
+  const all = [];
+  for (const slot in hands) hands[slot].forEach(h=> all.push(...h.cards));
+  all.push(...bankHand.cards);
+  const dest = discardPos.clone();
+  await Promise.all(all.map(c=>{
+    const from = c.outer.position.clone();
+    return tweenP(0.4, k=>{
+      c.outer.position.lerpVectors(from, dest, k);
+      c.outer.position.y = from.y + Math.sin(k*Math.PI)*0.15;
+      c.flipG.rotation.x = Math.PI*k;
+    });
+  }));
+  all.forEach(c=>scene.remove(c.outer));
+  for (const slot in hands) hands[slot].forEach(h=>{
+    h.cards = [];
+    if (h.sprite) h.sprite.sprite.visible = false;
+  });
+  bankHand.cards = [];
+  if (bankHand.sprite) bankHand.sprite.sprite.visible = false;
+  addDiscards(Math.min(all.length, 5));
+}
+function performHandStart(n){
+  for (const slot in hands){
+    hands[slot].forEach(h=>{
+      h.cards.forEach(c=>scene.remove(c.outer));
+      removeStack(h.betStack);
+      if (h.sprite) scene.remove(h.sprite.sprite);
+    });
+    delete hands[slot];
+  }
+  bankHand.cards.forEach(c=>scene.remove(c.outer));
+  bankHand.cards = [];
+  if (bankHand.sprite){ scene.remove(bankHand.sprite.sprite); bankHand.sprite = null; }
+  players.filter(p=>p.slot !== 5).forEach(p=>{
+    hands[p.slot] = [newHand()];
+    attachHandSprite(p.slot, 0);
+  });
+  announce(`MANO ${n}`, 1300);
+  log(`— mano ${n} —`, 'sys');
+}
+function recomposeReserves(){
+  players.forEach(p=>{
+    removeStack(reserveStacks[p.slot]);
+    reserveStacks[p.slot] = p.alive ? buildStack(moneyToChips(p.money),
+      p.slot === 5 ? bankReserve : reserveSpotOf(p.slot)) : null;
+    if (moneySprites[p.slot]) moneySprites[p.slot].redraw(p.money, p.alive);
+    if (p.bot) p.bot.tag.redraw(p.alive);
+  });
+}
+function refreshMoneySprites(){
+  players.forEach(p=>{
+    if (!moneySprites[p.slot]){
+      const ms = makeMoneySprite(p.slot === 5);
+      const pos = p.slot === 5 ? bankReserve : reserveSpotOf(p.slot);
+      ms.sprite.position.set(pos.x, TABLE_Y + 0.052, pos.z);
+      scene.add(ms.sprite);
+      moneySprites[p.slot] = ms;
+    }
+  });
+}
+
+// ---------- costruzione partita ----------
+function clearSceneGame(){
+  for (const slot in hands){
+    hands[slot].forEach(h=>{
+      h.cards.forEach(c=>scene.remove(c.outer));
+      if (h.sprite) scene.remove(h.sprite.sprite);
+      removeStack(h.betStack);
+    });
+    delete hands[slot];
+  }
+  bankHand.cards.forEach(c=>scene.remove(c.outer));
+  bankHand.cards = [];
+  if (bankHand.sprite){ scene.remove(bankHand.sprite.sprite); bankHand.sprite = null; }
+  players.forEach(p=>{ if (p.bot) scene.remove(p.bot.group); });
+  players = [];
+  Object.values(reserveStacks).forEach(removeStack);
+  for (const k in reserveStacks) delete reserveStacks[k];
+  Object.values(moneySprites).forEach(m=>scene.remove(m.sprite));
+  for (const k in moneySprites) delete moneySprites[k];
+}
+function buildFromRoster(roster){
+  clearSceneGame();
+  const myRef = NET.mode === 'client' ? NET.seat : 0;
+  roster.forEach(e=>{
+    if (!e || e.slot === undefined) return;
+    const isMe = (e.kind === 'human' && e.ref === myRef);
+    const p = { slot:e.slot, kind: isMe ? 'you' : (e.kind === 'bot' ? 'bot' : 'remote'),
+                name:e.name, money:1000, alive:true, ai:e.ai || null, connSeat:(e.ref ?? -1) };
+    if (isMe){
+      mySlot = e.slot;
+    } else if (e.slot === 5){
+      const look = e.kind === 'bot' ? BOT_DEFS[e.def] : HUMAN_LOOKS[5];
+      p.bot = makeBot({ ...look, name:e.name, standing:true, pos:BANKER_POS, rotY:0 });
+      scene.add(p.bot.group);
+    } else {
+      const look = e.kind === 'bot' ? BOT_DEFS[e.def] : HUMAN_LOOKS[e.slot];
+      const sp = seatPosOf(e.slot);
+      p.bot = makeBot({ ...look, name:e.name, pos:sp, rotY:PLAYER_PHIS[e.slot] + Math.PI });
+      scene.add(p.bot.group);
+    }
+    players.push(p);
+    if (e.slot !== 5){
+      hands[e.slot] = [newHand()];
+      attachHandSprite(e.slot, 0);
+    }
+  });
+  applyCameraRole(mySlot);
+  refreshMoneySprites();
+  recomposeReserves();
+  updateMoneyHUD();
+  discardCount = 0;
+  while (discardGroup.children.length) discardGroup.remove(discardGroup.children[0]);
+}
+
+// ---------- puntata ----------
+async function composeBet(money){
+  const maxBet = Math.max(MIN_BET, Math.floor(money/50)*50);
+  let bet = 0;
+  let preview = null;
+  const refresh = ()=>{
+    if (preview) removeStack(preview);
+    preview = bet > 0 ? buildStack(moneyToChips(bet), betSpotOf(mySlot, 0)) : null;
+  };
+  while (true){
+    setTurn(`LA TUA PUNTATA · HAI €${money} · PUNTI €${bet}`, true);
+    const opts = [
+      { key:'1', label:'+50',  sub:'aggiungi fiches', action:50 },
+      { key:'2', label:'+100', sub:'aggiungi fiches', action:100 },
+      { key:'3', label:'+250', sub:'aggiungi fiches', action:250 },
+      { key:'4', label:'TUTTO', sub:`punta €${maxBet}`, action:'all' },
+      { key:'Backspace', label:'AZZERA', sub:'ricomincia da zero', action:0 },
+    ];
+    if (bet >= MIN_BET) opts.push({ key:'Enter', label:'CONFERMA', sub:'il banco distribuisce', action:'ok' });
+    const a = await askOptions(opts, `minimo €${MIN_BET} · massimo €${maxBet}`);
+    if (a === 'ok'){ removeStack(preview); return bet; }
+    if (a === 0) bet = 0;
+    else if (a === 'all') bet = maxBet;
+    else bet = Math.min(maxBet, bet + a);
+    refresh();
+  }
+}
+function botBet(p){
+  let b = Math.round(p.money * p.ai.betFrac * (0.5 + Math.random()) / 50) * 50;
+  b = clamp(b, MIN_BET, Math.floor(p.money/50)*50);
+  return Math.max(MIN_BET, b);
+}
+function canDouble(p, hand){
+  return hand.cards.length === 2 && !hand.fromSplit && !hand.done && p.money >= hand.bet;
+}
+function canSplit(p, hand){
+  if (hand.cards.length !== 2 || hand.fromSplit || hand.done) return false;
+  if (hands[p.slot].length !== 1) return false;
+  if (p.money < hand.bet) return false;
+  return handValue([hand.cards[0]]) === handValue([hand.cards[1]]);
+}
+
+/* ============================================================
+   RETE
+   ============================================================ */
+const NET = { mode:'off', peer:null, code:null, seat:0, conns:{}, hostConn:null, lobby:[], inMatch:false };
+let pendingChoiceNet = null;
+function genCode(){
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i=0;i<4;i++) s += abc[(Math.random()*abc.length)|0];
+  return s;
+}
+function bcast(msg){
+  if (NET.mode !== 'host') return;
+  Object.values(NET.conns).forEach(c=>{ try{ c.send(msg); }catch(e){} });
+}
+function bcastEv(ev){ bcast({ t:'ev', ev }); }
+function netError(msg){
+  npStatus.textContent = msg;
+  npStatus.classList.add('err');
+}
+function closeNet(silent){
+  if (NET.peer){ try{ NET.peer.destroy(); }catch(e){} }
+  NET.mode='off'; NET.peer=null; NET.code=null; NET.seat=0;
+  NET.conns={}; NET.hostConn=null; NET.lobby=[]; NET.inMatch=false;
+  pendingChoiceNet = null;
+  lobbyTag.classList.add('hidden');
+  removeLobbyAvatars();
+  chatHint.style.display = 'none';
+  if (!silent) enterMenu();
+}
+function leaveNet(toMenu){
+  if (NET.mode==='client' && NET.hostConn){ try{ NET.hostConn.close(); }catch(e){} }
+  if (NET.mode==='host'){ bcast({t:'room_closed'}); }
+  closeNet(true);
+  if (toMenu) enterMenu();
+}
+function removeLobbyAvatars(){
+  Object.values(lobbyAvatars).forEach(a=>scene.remove(a.group));
+  for (const k in lobbyAvatars) delete lobbyAvatars[k];
+}
+
+function hostRoom(){
+  const code = genCode();
+  npStatus.textContent = 'creazione stanza…'; npStatus.classList.remove('err');
+  const p = new Peer('ventuno-'+code, { debug:0 });
+  let settled = false;
+  p.on('open', ()=>{
+    settled = true;
+    NET.mode='host'; NET.peer=p; NET.code=code; NET.seat=0;
+    NET.lobby=[{seat:0, name:playerName}];
+    hideNetPanel();
+    renderLobbyLocal();
+    announce(`STANZA ${code}`, 2400);
+  });
+  p.on('error', e=>{
+    if (!settled && e.type==='unavailable-id'){ try{ p.destroy(); }catch(_){} hostRoom(); return; }
+    if (!settled){ netError('errore di rete: ' + e.type); try{ p.destroy(); }catch(_){} }
+  });
+  p.on('connection', conn=>{
+    conn.on('data', d=> onHostData(conn, d));
+    conn.on('close', ()=> onHostGone(conn));
+    conn.on('error', ()=> onHostGone(conn));
+  });
+}
+function onHostData(conn, d){
+  if (!d || typeof d!=='object') return;
+  if (d.t==='hello'){
+    if (NET.inMatch){ conn.send({t:'busy'}); setTimeout(()=>conn.close(), 150); return; }
+    const used = NET.lobby.map(e=>e.seat);
+    let seat = -1;
+    for (let s=0;s<6;s++) if (!used.includes(s)){ seat=s; break; }
+    if (seat<0){ conn.send({t:'full'}); setTimeout(()=>conn.close(), 150); return; }
+    conn.seat = seat;
+    NET.conns[seat] = conn;
+    NET.lobby.push({ seat, name:String(d.name||'OSPITE').replace(/[<>&]/g,'').slice(0,14).toUpperCase() });
+    conn.send({t:'welcome', seat, code:NET.code});
+    broadcastLobby();
+    return;
+  }
+  const pc = pendingChoiceNet;
+  if (pc && pc.seat === conn.seat){
+    if (d.t==='bet' && pc.kind==='bet'){
+      pendingChoiceNet = null;
+      pc.resolve(clamp(Math.round(+d.amount||MIN_BET), MIN_BET, 100000));
+      return;
+    }
+    if (d.t==='action' && pc.kind==='action'){
+      pendingChoiceNet = null;
+      pc.resolve({ act:String(d.act||'stand'), hi:+d.hi||0 });
+      return;
+    }
+    if (d.t==='end_choice' && pc.kind==='end'){
+      pendingChoiceNet = null;
+      pc.resolve(String(d.cond));
+      return;
+    }
+  }
+  if (d.t==='chat'){
+    const entry = NET.lobby.find(e=>e.seat===conn.seat);
+    const name = entry ? entry.name : '???';
+    const text = String(d.text||'').replace(/[<>&]/g,'').slice(0,120);
+    chatMsg(name, ' · ' + text, SEAT_COLORS[conn.seat]);
+    Object.values(NET.conns).forEach(c=>{ if (c!==conn) try{ c.send({t:'chat', name, text, color:SEAT_COLORS[conn.seat]}); }catch(e){} });
+    return;
+  }
+  if (d.t==='rename'){
+    const e = NET.lobby.find(x=>x.seat===conn.seat);
+    if (e){ e.name = String(d.name||'').replace(/[<>&]/g,'').slice(0,14).toUpperCase(); broadcastLobby(); }
+  }
+}
+function onHostGone(conn){
+  const seat = conn.seat;
+  if (seat == null) return;
+  delete NET.conns[seat];
+  NET.lobby = NET.lobby.filter(e=>e.seat!==seat);
+  if (!NET.inMatch){ broadcastLobby(); return; }
+  const p = players.find(x=>x.connSeat === seat);
+  if (p && p.alive){
+    p.alive = false;
+    if (hands[p.slot]) hands[p.slot].forEach(h=> h.done = true);
+    if (p.bot) p.bot.tag.redraw(false);
+    bcastEv({ k:'left', slot:p.slot });
+    log(`${p.name} è uscito dalla stanza`, 'bad');
+  }
+  const pc = pendingChoiceNet;
+  if (pc && pc.seat === seat){
+    pendingChoiceNet = null;
+    pc.resolve(pc.kind==='bet' ? MIN_BET : (pc.kind==='action' ? {act:'stand', hi:0} : null));
+  }
+}
+function broadcastLobby(){
+  if (NET.mode!=='host') return;
+  const msg = {t:'lobby', players:NET.lobby};
+  Object.values(NET.conns).forEach(c=>{ try{ c.send(msg); }catch(e){} });
+  renderLobbyLocal();
+}
+function joinRoom(codeRaw){
+  const code = String(codeRaw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (code.length < 3){ netError('inserisci il codice'); return; }
+  npStatus.textContent = 'connessione…'; npStatus.classList.remove('err');
+  const p = new Peer({ debug:0 });
+  let opened = false;
+  p.on('open', ()=>{
+    const conn = p.connect('ventuno-'+code, { reliable:true });
+    NET.peer = p; NET.hostConn = conn;
+    conn.on('open', ()=>{ opened = true; conn.send({t:'hello', name:playerName}); });
+    conn.on('data', onClientData);
+    conn.on('close', ()=>{
+      if (NET.mode==='client') netClosedByHost();
+      else if (!opened) netError('stanza non trovata');
+    });
+    setTimeout(()=>{
+      if (NET.mode!=='client' && !opened){
+        netError('nessuna risposta — controlla il codice');
+        try{ p.destroy(); }catch(e){}
+      }
+    }, 9000);
+  });
+  p.on('error', e=>{
+    if (e.type==='peer-unavailable') netError('stanza non trovata');
+    else netError('errore: ' + e.type);
+  });
+}
+function netClosedByHost(){
+  announce('STANZA CHIUSA', 2200, 'red');
+  leaveNet(true);
+}
+const evQueue = [];
+let evBusy = false;
+function enqueueEv(fn){
+  evQueue.push(fn);
+  pumpEv();
+}
+async function pumpEv(){
+  if (evBusy) return;
+  evBusy = true;
+  while (evQueue.length){
+    try { await evQueue.shift()(); } catch(e){ if (e !== ABORT) console.error(e); }
+  }
+  evBusy = false;
+}
+function onClientData(d){
+  if (!d || typeof d!=='object') return;
+  switch(d.t){
+    case 'welcome':
+      NET.mode='client'; NET.seat=d.seat; NET.code=d.code;
+      hideNetPanel();
+      renderLobbyLocal();
+      announce(`STANZA ${d.code}`, 2400);
+      break;
+    case 'lobby':
+      NET.lobby=d.players;
+      renderLobbyLocal();
+      break;
+    case 'start':
+      clientBegin(d.roster, d.cond);
+      break;
+    case 'ask_end':
+      askEndUI().then(cond=>{
+        if (NET.hostConn) NET.hostConn.send({ t:'end_choice', cond });
+      });
+      break;
+    case 'ev': handleNetEvent(d.ev); break;
+    case 'chat': chatMsg(d.name, ' · ' + d.text, d.color); break;
+    case 'room_closed': netClosedByHost(); break;
+    case 'full': netError('stanza piena'); leaveNet(false); break;
+    case 'busy': netError('partita già in corso'); leaveNet(false); break;
+  }
+}
+function handleNetEvent(ev){
+  if (!ev || typeof ev!=='object') return;
+  const tk = matchToken;
+  if (ev.k === 'note'){ announce(ev.text, ev.ms, ev.annCls); log(ev.text, ev.cls); return; }
+  if (ev.k === 'hand'){ performHandStart(ev.n); return; }
+  if (ev.k === 'turn'){
+    const p = bySlot(ev.slot);
+    if (p){
+      setTurn(p.kind==='you' ? 'IL TUO TURNO' : `TURNO DI ${p.name.toUpperCase()}`, p.kind==='you');
+      activePoint = hands[ev.slot] && hands[ev.slot][ev.hi] ? handSpot(ev.slot, ev.hi, 0) : shoePos.clone();
+      if (p.kind==='you' && NET.mode==='client') onMyTurnPrompt(ev.hi);
+    }
+    return;
+  }
+  if (ev.k === 'betting'){
+    const p = bySlot(ev.slot);
+    if (p){
+      setTurn(p.kind==='you' ? 'LA TUA PUNTATA' : `PUNTA ${p.name.toUpperCase()}`, p.kind==='you');
+      if (p.kind==='you' && NET.mode==='client'){
+        composeBet(p.money).then(amount=>{
+          if (NET.hostConn) NET.hostConn.send({ t:'bet', amount });
+        });
+      }
+    }
+    return;
+  }
+  if (ev.k === 'win'){
+    const p = bySlot(ev.slot);
+    if (p) enqueueEv(()=> performWin(p, tk, ev.stats));
+    return;
+  }
+  if (ev.k === 'left'){
+    const p = bySlot(ev.slot);
+    if (p && p.alive){
+      p.alive = false;
+      if (hands[ev.slot]) hands[ev.slot].forEach(h=> h.done = true);
+      if (p.bot) p.bot.tag.redraw(false);
+      log(`${p.name} è uscito dalla stanza`, 'bad');
+    }
+    return;
+  }
+  // eventi con mani: ignora quelli orfani (mai crashare)
+  enqueueEv(async ()=>{
+    const handOk = hands[ev.slot] && hands[ev.slot][ev.hi];
+    if (ev.k === 'deal'){
+      if (ev.bank || handOk) await performDeal(ev, tk);
+    }
+    else if (ev.k === 'bet'){ if (hands[ev.slot]) performBet(ev.slot, ev.amount); }
+    else if (ev.k === 'split'){ if (hands[ev.slot]) await performSplit(ev.slot, tk); }
+    else if (ev.k === 'double'){ if (handOk) performDoubleChips(ev.slot, ev.hi); }
+    else if (ev.k === 'reveal') await performReveal(tk);
+    else if (ev.k === 'pay'){ if (handOk) await performPay(ev.slot, ev.hi, ev.delta, ev.money, ev.bankerMoney, tk); }
+    else if (ev.k === 'sweep') await performSweep(tk);
+  });
+}
+function onMyTurnPrompt(hi){
+  const me = bySlot(mySlot);
+  const hand = hands[mySlot] && hands[mySlot][hi];
+  if (!me || !hand || hand.done || !hand.cards.length) return;
+  const v = handValue(hand.cards);
+  setTurn(`IL TUO TURNO · €${me.money} · PUNTI ${v}`, true);
+  const opts = [
+    { key:'1', label:'CARTA', sub:"chiedi un'altra carta", action:'hit' },
+    { key:'2', label:'STAI',  sub:'ti fermi qui',           action:'stand' },
+  ];
+  if (canDouble(me, hand)) opts.push({ key:'3', label:'RADDOPPIA', sub:'raddoppi la puntata, una carta sola', action:'double' });
+  if (canSplit(me, hand))  opts.push({ key:'4', label:'SDOPPIA',   sub:'due mani con la stessa puntata',      action:'split'  });
+  askOptions(opts, 'solo tastiera — scegli il numero').then(act=>{
+    if (NET.hostConn) NET.hostConn.send({ t:'action', hi, act });
+  });
+}
+addEventListener('beforeunload', ()=>{ if (NET.peer){ try{ NET.peer.destroy(); }catch(e){} } });
+
+// ---------- lobby ----------
+function renderLobbyLocal(){
+  if (NET.mode==='off') return;
+  removeLobbyAvatars();
+  myLobbySlot = lobbySlotOf(NET.seat);
+  applyCameraRole(myLobbySlot);
+  NET.lobby.forEach(e=>{
+    if (e.seat === NET.seat) return;
+    const slot = lobbySlotOf(e.seat);
+    const look = HUMAN_LOOKS[(e.seat % 6)];
+    let a;
+    if (slot === 'side'){
+      // 6° giocatore: in piedi A LATO del tavolo (non al posto del banco)
+      a = makeBot({ ...look, name:e.name, standing:true, pos:SIDE_POS,
+                    rotY: Math.atan2(CIRC_C.x - SIDE_POS.x, CIRC_C.z - SIDE_POS.z) });
+    } else {
+      a = makeBot({ ...look, name:e.name, pos:seatPosOf(slot), rotY:PLAYER_PHIS[slot] + Math.PI });
+    }
+    scene.add(a.group);
+    lobbyAvatars[e.seat] = a;
+  });
+  lobbyTag.textContent = `STANZA ${NET.code} · ${NET.lobby.length}/6`;
+  lobbyTag.classList.remove('hidden');
+  chatHint.style.display = '';
+  if (inMenu && !starting) buildMenuCards();
+  refreshMenuHint();
+}
+function hideNetPanel(){ netPanel.classList.add('hidden'); npCode.blur(); }
+npClose.onclick = hideNetPanel;
+npCreate.onclick = ()=>{ AudioFX.init(); hostRoom(); };
+npJoin.onclick   = ()=>{ AudioFX.init(); joinRoom(npCode.value); };
+npCode.addEventListener('keydown', e=>{
+  e.stopPropagation();
+  if (e.key === 'Enter') npJoin.click();
+});
+
+// ---------- chat ----------
+let chatOpen = false;
+function setChat(open){
+  chatOpen = open;
+  chatEl.classList.toggle('open', open);
+  if (open) setTimeout(()=>chatInput.focus(), 30);
+  else { chatInput.blur(); chatInput.value = ''; }
+}
+function chatMsg(name, text, color){
+  const d = document.createElement('div');
+  d.className = 'cmsg';
+  const nm = document.createElement('span');
+  nm.textContent = name;
+  nm.style.color = color;
+  d.appendChild(nm);
+  d.appendChild(document.createTextNode(text.replace(/[<>&]/g, '')));
+  chatLog.appendChild(d);
+  while (chatLog.children.length > 30) chatLog.firstChild.remove();
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+function sendChat(text){
+  if (NET.mode==='host'){
+    chatMsg(playerName, ' · '+text, SEAT_COLORS[0]);
+    bcast({t:'chat', name:playerName, text, color:SEAT_COLORS[0]});
+  } else if (NET.mode==='client'){
+    chatMsg(playerName, ' · '+text, SEAT_COLORS[NET.seat]);
+    if (NET.hostConn) NET.hostConn.send({t:'chat', text});
+  }
+}
+chatInput.addEventListener('keydown', e=>{
+  e.stopPropagation();
+  if (e.key === 'Enter'){
+    const txt = chatInput.value.trim().slice(0, 120);
+    chatInput.value = '';
+    if (txt && NET.mode!=='off') sendChat(txt);
+  } else if (e.key === 'Escape' || e.key === 'Tab'){
+    e.preventDefault();
+    setChat(false);
+  }
+});
+
+/* ============================================================
+   CICLO AUTORITATIVO
+   ============================================================ */
+const END_CONDS = {
+  'ULTIMO': { label: 'ULTIMO CON DENARO' },
+  'RICCO':  { label: 'PRIMO A €2000' },
+  'MANI':   { label: 'SETTE MANI' },
+};
+function askEndUI(){
+  return askOptions([
+    { key:'1', label:'ULTIMO CON DENARO', sub:'vince chi resta quando gli altri sono a secco', action:'ULTIMO' },
+    { key:'2', label:'PRIMO A €2000',     sub:'il primo che raddoppia la cassa iniziale',      action:'RICCO'  },
+    { key:'3', label:'SETTE MANI',        sub:'il più ricco dopo sette mani',                  action:'MANI'   },
+  ], 'come finisce la serata? · 1 · 2 · 3');
+}
+/* Partecipanti: umani + bot di riempimento (fino a 6) */
+function buildParticipants(){
+  const humans = NET.mode === 'off'
+    ? [{kind:'human', ref:0, name:playerName}]
+    : NET.lobby.map(e=>({kind:'human', ref:e.seat, name:e.name}));
+  const parts = [...humans];
+  let bi = 0;
+  while (parts.length < 6 && bi < BOT_DEFS.length){
+    parts.push({kind:'bot', def:bi, name:BOT_DEFS[bi].name, ai:BOT_DEFS[bi].ai});
+    bi++;
+  }
+  return parts;
+}
+/* Posti: BANCO estratto A SORTE tra i partecipanti (slot 5, in piedi),
+   host al centro, chi resta sulle sedie libere. Mai slot duplicati. */
+function buildRosterSlots(parts){
+  const bankIdx = (Math.random() * parts.length) | 0;
+  const banker = parts[bankIdx];
+  const others = parts.filter((_, i) => i !== bankIdx);
+  const roster = [{slot:5, ...banker}];
+  const rem = [...others];
+  const freeSlots = [];
+  const hostIdx = rem.findIndex(p => p.kind === 'human' && p.ref === 0);
+  if (hostIdx >= 0){
+    roster.push({slot:CENTER_SLOT, ...rem.splice(hostIdx, 1)[0]});
+  } else {
+    freeSlots.push(CENTER_SLOT);   // l'host è il banco: il centro va a chi c'è
+  }
+  freeSlots.push(0, 1, 3, 4);
+  let bi = 0;
+  rem.forEach(p=>{
+    roster.push({slot: freeSlots[bi] ?? 4, ...p});
+    bi++;
+  });
+  return roster;
+}
+function waitRemote(kind, connSeat, timeoutMs, fallback){
+  return new Promise(res=>{
+    let done = false;
+    const finish = v=>{ if (!done){ done = true; pendingChoiceNet = null; res(v); } };
+    pendingChoiceNet = { kind, seat:connSeat, resolve: finish };
+    setTimeout(()=> finish(fallback), timeoutMs);
+  });
+}
+function botAction(p, hand){
+  const v = handValue(hand.cards);
+  if (canSplit(p, hand) && Math.random() < p.ai.splitProb) return 'split';
+  if (canDouble(p, hand) && v >= 9 && v <= 11 && Math.random() < p.ai.doubleProb) return 'double';
+  if (v >= p.ai.standOn) return 'stand';
+  return 'hit';
+}
+async function myActionUI(p, hand, hi){
+  while (true){
+    const v = handValue(hand.cards);
+    setTurn(`IL TUO TURNO · €${p.money} · PUNTI ${v}`, true);
+    const opts = [
+      { key:'1', label:'CARTA', sub:"chiedi un'altra carta", action:'hit' },
+      { key:'2', label:'STAI',  sub:'ti fermi qui',           action:'stand' },
+    ];
+    if (canDouble(p, hand)) opts.push({ key:'3', label:'RADDOPPIA', sub:'raddoppi la puntata, una carta sola', action:'double' });
+    if (canSplit(p, hand))  opts.push({ key:'4', label:'SDOPPIA',   sub:'due mani con la stessa puntata',      action:'split'  });
+    const act = await askOptions(opts, 'solo tastiera — scegli il numero');
+    if (act === 'split' && !canSplit(p, hand)) continue;
+    if (act === 'double' && !canDouble(p, hand)) continue;
+    return act;
+  }
+}
+async function playerTurnAuth(p, tk){
+  const slot = p.slot;
+  const arr = hands[slot];
+  for (let hi=0; hi<arr.length; hi++){
+    const hand = arr[hi];
+    if (hand.done || !hand.cards.length) continue;
+    while (!hand.done){
+      bcastEv({ k:'turn', slot, hi });
+      activePoint = handSpot(slot, hi, 0);
+      setTurn(p.kind==='you' ? 'IL TUO TURNO' : `TURNO DI ${p.name.toUpperCase()}`, p.kind==='you');
+      let act;
+      if (p.kind === 'you') act = await myActionUI(p, hand, hi);
+      else if (p.kind === 'remote'){
+        const r = await waitRemote('action', p.connSeat, 30000, { act:'stand' });
+        act = r.act;
+        if (act==='split' && !canSplit(p, hand)) act = 'stand';
+        if (act==='double' && !canDouble(p, hand)) act = 'stand';
+      }
+      else { await sleep(500 + Math.random()*450); act = botAction(p, hand); }
+
+      if (act === 'stand'){ hand.done = true; break; }
+      if (act === 'double'){
+        bcastEv({ k:'double', slot, hi });
+        performDoubleChips(slot, hi);
+        note(`${p.name} raddoppia`, 'sys', 1200);
+        await step(300, tk);
+        await dealTo(slot, hi, true, tk, false, true);
+        hand.done = true;
+        const dv = handValue(hand.cards);
+        if (dv > 21) note(p.kind==='you' ? `sballi a ${dv}` : `${p.name} sballa a ${dv}`, 'bad', 1500, 'red');
+        await step(500, tk);
+        break;
+      }
+      if (act === 'split'){
+        bcastEv({ k:'split', slot });
+        await performSplit(slot, tk);
+        note(`${p.name} sdoppia`, 'sys', 1200);
+        await step(350, tk);
+        await dealTo(slot, hi, true, tk);
+        await dealTo(slot, hi+1, true, tk);
+        if (arr[0].cards[0].rank === 0 && arr[1].cards[0].rank === 0){
+          arr[0].done = true; arr[1].done = true;
+          note('assi sdoppiati: una carta per mano', 'sys', 1600);
+        }
+        continue;
+      }
+      await dealTo(slot, hi, true, tk);
+      const v = handValue(hand.cards);
+      if (v > 21){
+        note(p.kind==='you' ? `sballi a ${v}` : `${p.name} sballa a ${v}`, 'bad', 1500, 'red');
+        hand.done = true;
+        await step(750, tk);
+        break;
+      }
+      if (v === 21){ hand.done = true; break; }
+    }
+  }
+}
+function checkEnd(){
+  const banker = bankerPlayer();
+  if (banker && banker.money <= 0){ gamePhase = 'over'; return true; }
+  if (!players.some(p=>p.slot !== 5 && p.alive && p.money >= MIN_BET)){ gamePhase = 'over'; return true; }
+  if (endCond === 'RICCO' && players.some(p=>p.money >= 2000)){ gamePhase = 'over'; return true; }
+  if (endCond === 'MANI' && handCount >= 7){ gamePhase = 'over'; return true; }
+  if (endCond === 'ULTIMO' && players.filter(p=>p.money >= MIN_BET).length <= 1){ gamePhase = 'over'; return true; }
+  return false;
+}
+function pickWinner(){
+  return players.reduce((a,b)=> (!a || b.money > a.money) ? b : a, null);
+}
+async function performWin(w, tk, stats){
+  if (stats && stats.mani) handCount = stats.mani;
+  gamePhase = 'win';
+  setTurn('');
+  log(`${w.name} vince la serata`, 'win');
+  await step(1100, tk);
+  const target = w.bot ? w.bot.group.localToWorld(new THREE.Vector3(0, 1.1, 0)) : camBase.clone();
+  winnerSpot.position.set(target.x, 2.35, target.z + 0.6);
+  winnerTarget.position.copy(target);
+  const s0 = spot.intensity, a0 = ambient.intensity, r0 = rim.intensity;
+  tweenVal(1.5, k=>{
+    spot.intensity    = s0 + (13  - s0)*k;
+    ambient.intensity = a0 + (0.32 - a0)*k;
+    rim.intensity     = r0 + (0.22 - r0)*k;
+    winnerSpot.intensity = 30*k;
+  });
+  AudioFX.drone();
+  announce(w.kind==='you' ? 'HAI VINTO LA SERATA' : `${w.name.toUpperCase()} VINCE LA SERATA`, 4200, 'gold');
+  await step(1900, tk);
+  winName.textContent = w.name.toUpperCase();
+  winSub.textContent = `chiude con € ${w.money}`;
+  const bnk = bankerPlayer();
+  winStats.textContent = `mani ${handCount} · banco ${bnk ? bnk.name : '—'} · ${END_CONDS[endCond].label}`;
+  btnRematch.style.display = (NET.mode==='client') ? 'none' : '';
+  btnChange.textContent = (NET.mode==='off') ? 'TORNA AL TAVOLO' : 'ESCI DALLA STANZA';
+  winScreen.classList.remove('hidden');
+}
+async function playHand(tk){
+  handCount++;
+  bcastEv({ k:'hand', n: handCount });
+  performHandStart(handCount);
+  await step(700, tk);
+  newDeck();
+
+  players.forEach(p=>{
+    if (p.alive && p.money < MIN_BET){
+      p.alive = false;
+      note(`${p.name} è fuori`, 'bad', 1600);
+      if (p.bot) p.bot.tag.redraw(false);
+    }
+  });
+  const inPlay = players.filter(p=>p.slot !== 5 && p.alive);
+  if (!inPlay.length) return;
+
+  for (const p of inPlay){
+    bcastEv({ k:'betting', slot:p.slot });
+    setTurn(p.kind==='you' ? 'LA TUA PUNTATA' : `PUNTA ${p.name.toUpperCase()}`, p.kind==='you');
+    activePoint = betSpotOf(p.slot, 0);
+    let amount;
+    if (p.kind === 'you') amount = await composeBet(p.money);
+    else if (p.kind === 'remote') amount = await waitRemote('bet', p.connSeat, 35000, MIN_BET);
+    else { await sleep(400 + Math.random()*400); amount = botBet(p); }
+    amount = clamp(amount, MIN_BET, Math.max(MIN_BET, Math.floor(p.money/50)*50));
+    bcastEv({ k:'bet', slot:p.slot, amount });
+    performBet(p.slot, amount);
+    await step(220, tk);
+  }
+  AudioFX.chip(0.28);
+  await step(350, tk);
+
+  for (let round=0; round<2; round++){
+    for (const p of inPlay) await dealTo(p.slot, 0, true, tk);
+    await dealTo(0, 0, round===0, tk, true);
+  }
+  await step(450, tk);
+
+  const bjs = inPlay.filter(p => handValue(hands[p.slot][0].cards) === 21);
+  for (const p of bjs){
+    note(`blackjack di ${p.name}!`, 'win', 1700, 'gold');
+    await step(1200, tk);
+  }
+
+  const up = bankHand.cards[0];
+  const bankBJ = handValue(bankHand.cards) === 21;
+  if (up.rank === 0 || up.rank >= 10){
+    setTurn('IL BANCO CONTROLLA…');
+    activePoint = bankCardSpotOf(1);
+    await step(1100, tk);
+    if (bankBJ){
+      bcastEv({ k:'reveal' });
+      await performReveal(tk);
+      note('il banco ha ventuno', 'bad', 2200, 'red');
+      await step(1400, tk);
+    }
+  }
+
+  if (!bankBJ){
+    for (const p of inPlay){
+      if (handValue(hands[p.slot][0].cards) === 21) continue;
+      await playerTurnAuth(p, tk);
+    }
+    const anyLive = inPlay.some(p=> hands[p.slot].some(h=>handValue(h.cards) <= 21));
+    setTurn('IL BANCO GIOCA');
+    activePoint = shoePos.clone();
+    await step(700, tk);
+    bcastEv({ k:'reveal' });
+    await performReveal(tk);
+    await step(450, tk);
+    if (anyLive){
+      let guard = 0;
+      while (handValue(bankHand.cards) < 17 && guard++ < 6){
+        log('il banco serve carta…', 'sys');
+        await dealTo(0, 0, true, tk, true);
+        await step(420, tk);
+      }
+    }
+    const bt = handValue(bankHand.cards);
+    if (bt > 21) note(`il banco sballa a ${bt}`, 'win', 2200, 'gold');
+    else note(`il banco ferma a ${bt}`, 'sys', 1700);
+    await step(1200, tk);
+  }
+
+  const bankTotal = handValue(bankHand.cards);
+  const banker = bankerPlayer();
+  for (const p of inPlay){
+    for (let hi=0; hi<hands[p.slot].length; hi++){
+      const hand = hands[p.slot][hi];
+      if (!hand.cards.length) continue;
+      const t = handValue(hand.cards);
+      const bj = t === 21 && hand.cards.length === 2 && !hand.fromSplit;
+      let delta;
+      if (t > 21) delta = -hand.bet;
+      else if (bj && bankBJ) delta = 0;
+      else if (bj) delta = Math.round(hand.bet*1.5);
+      else if (bankBJ) delta = -hand.bet;
+      else if (bankTotal > 21 || t > bankTotal) delta = hand.bet;
+      else if (t === bankTotal) delta = 0;
+      else delta = -hand.bet;
+      const newMoney = p.money + (delta > 0 ? hand.bet + delta : (delta === 0 ? hand.bet : 0));
+      const newBanker = banker ? banker.money - delta : 0;
+      bcastEv({ k:'pay', slot:p.slot, hi, delta, money:newMoney, bankerMoney:newBanker });
+      await performPay(p.slot, hi, delta, newMoney, newBanker, tk);
+      const label = hands[p.slot].length > 1 ? ` (mano ${hi+1})` : '';
+      if (delta > 0) log(`${p.name} vince €${delta}${label}`, 'win');
+      else if (delta < 0) log(`${p.name} perde €${hand.bet}${label}`, 'bad');
+      else log(`${p.name} pari${label} — puntata restituita`, 'sys');
+      await step(150, tk);
+    }
+  }
+  recomposeReserves();
+  await step(500, tk);
+  bcastEv({ k:'sweep' });
+  await performSweep(tk);
+  activePoint = null;
+  setTurn('');
+  await step(350, tk);
+}
+async function runGame(roster, cond){
+  const tk = ++matchToken;
+  NET.inMatch = true;
+  try{
+    tweens.length = 0;
+    gamePhase = 'playing';
+    handCount = 0;
+    endCond = cond;
+    restoreLights();
+    winScreen.classList.add('hidden');
+    clearMenuCards();
+    removeLobbyAvatars();
+    buildFromRoster(roster);
+    inMenu = false; starting = false;
+    menuHUD.classList.add('away');
+    log('tutti si siedono con €1000', 'sys');
+    setTurn('');
+    players.forEach((p, i)=>{
+      if (!p.bot) return;
+      p.bot.group.visible = false;
+      setTimeout(()=>{
+        if (tk === matchToken && p.bot){ p.bot.group.visible = true; AudioFX.chip(0.12); }
+      }, 150 + i*220);
+    });
+    await step(1500, tk);
+    note(`si gioca a: ${END_CONDS[cond].label}`, 'sys', 2800, 'gold');
+    await step(1800, tk);
+    while (gamePhase === 'playing'){
+      await playHand(tk);
+      if (checkEnd()) break;
+      await step(800, tk);
+    }
+    if (gamePhase === 'playing' || gamePhase === 'over'){
+      if (bankerPlayer() && bankerPlayer().money <= 0)
+        note('il banco è a secco', 'bad', 2400, 'red');
+      const w = pickWinner();
+      bcastEv({ k:'win', slot:w.slot, stats:{ mani:handCount } });
+      await performWin(w, tk);
+    }
+  } catch(e){
+    if (e !== ABORT) console.error(e);
+  } finally {
+    NET.inMatch = false;
+  }
+}
+function clientBegin(roster, cond){
+  matchToken++;
+  tweens.length = 0;
+  evQueue.length = 0;
+  clearMenuCards();          // FIX: niente più assso/re sul panno in partita
+  gamePhase = 'playing';
+  endCond = cond;
+  handCount = 0;
+  restoreLights();
+  winScreen.classList.add('hidden');
+  removeLobbyAvatars();
+  buildFromRoster(roster);
+  inMenu = false; starting = false;
+  menuHUD.classList.add('away');
+  setTurn('');
+  log('tutti si siedono con €1000', 'sys');
+}
+async function startSoloWithAnnounce(){
+  const parts = buildParticipants();
+  const roster = buildRosterSlots(parts);
+  const bnk = roster.find(e=>e.slot === 5);
+  announce('SI ESTRAE IL BANCO…', 1600);
+  await sleep(1500);
+  const bnkName = bnk.kind==='human' ? 'SEI IL BANCO TU' : `IL BANCO È ${bnk.name.toUpperCase()}`;
+  announce(bnkName, 2600, 'gold');
+  log(`il banco è ${bnk.name}`, 'sys');
+  await sleep(1800);
+  let cond;
+  if (bnk.kind === 'human' && bnk.ref === 0) cond = await askEndUI();
+  else {
+    const keys = Object.keys(END_CONDS);
+    cond = keys[(Math.random()*keys.length)|0];
+  }
+  runGame(roster, cond);
+}
+
+/* FIX PRINCIPALE: flag dedicato, messo DOPO il controllo.
+   Prima pickKing settava `starting` e startMatchMP si bloccava
+   da solo: la partita non partiva mai. */
+let matchLaunching = false;
+async function startMatchMP(){
+  if (NET.mode !== 'host' || NET.inMatch || matchLaunching) return;
+  matchLaunching = true;
+  try{
+    const parts = buildParticipants();
+    const roster = buildRosterSlots(parts);
+    const bnk = roster.find(e=>e.slot === 5);
+    const isHostBank = bnk.kind === 'human' && bnk.ref === 0;
+
+    bcastEv({ k:'note', text:'SI ESTRAE IL BANCO…', cls:'sys', ms:1700 });
+    announce('SI ESTRAE IL BANCO…', 1700);
+    await sleep(1600);
+    const bnkName = isHostBank ? 'SEI IL BANCO TU' : `IL BANCO È ${bnk.name.toUpperCase()}`;
+    bcastEv({ k:'note', text:`il banco è ${bnk.name}`, cls:'sys', ms:2600, annCls:'gold' });
+    announce(bnkName, 2600, 'gold');
+    log(`il banco è ${bnk.name}`, 'sys');
+    await sleep(1800);
+
+    let cond;
+    if (isHostBank){
+      cond = await askEndUI();
+    } else if (bnk.kind === 'human'){
+      bcastEv({ k:'note', text:`${bnk.name} sceglie come finisce la serata…`, cls:'sys', ms:2400 });
+      const conn = NET.conns[bnk.ref];
+      if (conn) conn.send({ t:'ask_end' });
+      cond = await waitRemote('end', bnk.ref, 20000, null);
+      if (!cond){
+        const keys = Object.keys(END_CONDS);
+        cond = keys[(Math.random()*keys.length)|0];
+      }
+    } else {
+      const keys = Object.keys(END_CONDS);
+      cond = keys[(Math.random()*keys.length)|0];
+    }
+    bcast({ t:'start', roster, cond });
+    await runGame(roster, cond);
+  } finally {
+    matchLaunching = false;
+  }
+}
+
+/* ============================================================
+   IL TAVOLO È IL MENÙ
+   ============================================================ */
+const menuCards = [];
+let hoveredMenu = null;
+function menuCardLabelFor(rank){
+  if (rank === 0) return 'ASSO DI CUORI · DA SOLO';
+  if (NET.mode === 'host') return 'RE DI CUORI · INIZIA';
+  if (NET.mode === 'client') return "RE DI CUORI · IN ATTESA";
+  return 'RE DI CUORI · ONLINE';
+}
+function buildMenuCards(){
+  clearMenuCards();
+  let phi, dist;
+  if (myLobbySlot === 'side'){
+    phi = Math.atan2(SIDE_POS.x - CIRC_C.x, SIDE_POS.z - CIRC_C.z);
+    dist = 0.70;
+  } else {
+    phi = PLAYER_PHIS[myLobbySlot] ?? 0;
+    dist = 0.48;
+  }
+  const d = new THREE.Vector3(Math.sin(phi), 0, Math.cos(phi));
+  const q = new THREE.Vector3(Math.cos(phi), 0, -Math.sin(phi));
+  const base = new THREE.Vector3(CIRC_C.x, TABLE_Y + 0.012, CIRC_C.z).addScaledVector(d, dist);
+  const defs = [
+    { rank:0,  suit:0, off:-0.16 },
+    { rank:12, suit:0, off: 0.16 },
+  ];
+  defs.forEach(df=>{
+    const c = makeCardMesh(df.rank, df.suit);
+    c.flipG.rotation.x = 0;
+    c.outer.scale.setScalar(1.4);
+    const pos = base.clone().addScaledVector(q, df.off);
+    c.outer.position.copy(pos);
+    c.outer.rotation.y = phi + 0.10 * (df.off < 0 ? 1 : -1);
+    scene.add(c.outer);
+    const lab = makeLabelSprite();
+    lab.sprite.position.set(pos.x, TABLE_Y + 0.15, pos.z);
+    lab.redraw(menuCardLabelFor(df.rank), false);
+    scene.add(lab.sprite);
+    menuCards.push({ rank:df.rank, mesh:c, label:lab });
+  });
+}
+function clearMenuCards(){
+  menuCards.forEach(mc=>{
+    scene.remove(mc.mesh.outer);
+    scene.remove(mc.label.sprite);
+  });
+  menuCards.length = 0;
+  hoveredMenu = null;
+}
+async function drawMenuCard(mc, tk){
+  const c = mc.mesh;
+  mc.label.sprite.visible = false;
+  const p0 = c.outer.position.clone();
+  const q0 = c.outer.quaternion.clone();
+  const target = camera.localToWorld(new THREE.Vector3(0, -0.10, 0.40));
+  const qT = camera.quaternion.clone()
+    .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI/2));
+  activePoint = p0.clone();
+  AudioFX.flipSfx();
+  await tweenP(0.8, k=>{
+    c.outer.position.lerpVectors(p0, target, k);
+    c.outer.quaternion.slerpQuaternions(q0, qT, k);
+  });
+  await sleep(500);
+  if (tk !== menuToken) return;
+  const qEnd = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
+  await tweenP(0.5, k=>{
+    c.outer.position.lerpVectors(target, discardPos, k);
+    c.outer.position.y = discardPos.y + Math.sin(k*Math.PI)*0.2;
+    c.outer.quaternion.slerpQuaternions(qT, qEnd, k);
+    c.flipG.rotation.x = Math.PI*k;
+  });
+  scene.remove(c.outer);
+  addDiscards(1);
+}
+async function pickAce(){
+  if (!inMenu || starting) return;
+  // FIX: l'asso è SOLO offline. In stanza lanciava una partita
+  // fantasma che mandava in crash i client collegati.
+  if (NET.mode !== 'off'){
+    AudioFX.init();
+    AudioFX.chip(0.2);
+    announce('SEI IN UNA STANZA · ESCI PER GIOCARE DA SOLO', 2200);
+    return;
+  }
+  starting = true;
+  const tk = ++menuToken;
+  inMenu = false;
+  AudioFX.init();
+  saveName();
+  menuHUD.classList.add('away');
+  renderer.domElement.style.cursor = 'default';
+  await drawMenuCard(menuCards[0], tk);
+  if (tk !== menuToken){ starting = false; return; }
+  announce('ASSO DI CUORI', 1500);
+  await sleep(900);
+  if (tk !== menuToken){ starting = false; return; }
+  clearMenuCards();
+  starting = false;
+  startSoloWithAnnounce();
+}
+function pickKing(){
+  if (!inMenu || starting) return;
+  AudioFX.init();
+  saveName();
+  if (NET.mode === 'host'){
+    // FIX: niente più flag `starting` premuto in anticipo —
+    // startMatchMP ora parte davvero
+    clearMenuCards();
+    menuHUD.classList.add('away');
+    startMatchMP();
+    return;
+  }
+  if (NET.mode === 'client'){
+    AudioFX.chip(0.25);
+    announce("IN ATTESA DELL'HOST…", 1800);
+    return;
+  }
+  AudioFX.chip(0.25);
+  netPanel.classList.remove('hidden');
+  npStatus.textContent = '';
+  npStatus.classList.remove('err');
+  setTimeout(()=>npCode.focus(), 30);
+}
+function refreshMenuHint(){
+  if (!inMenu) return;
+  if (NET.mode==='host') menuHint.textContent = `STANZA ${NET.code} · ${NET.lobby.length}/6 · CLICCA IL RE (o INVIO) PER INIZIARE`;
+  else if (NET.mode==='client') menuHint.textContent = `STANZA ${NET.code} · ${NET.lobby.length}/6 · IN ATTESA DELL'HOST…`;
+  else menuHint.textContent = "ASSO DI CUORI = DA SOLO · RE DI CUORI = ONLINE";
+}
+function saveName(){
+  playerName = nameInput.value.replace(/[<>&"']/g, '').trim().slice(0, 14).toUpperCase() || 'OSPITE';
+  localStorage.setItem('rr_name', playerName);
+  if (NET.mode==='host'){
+    const e = NET.lobby.find(x=>x.seat===0);
+    if (e){ e.name = playerName; broadcastLobby(); }
+  } else if (NET.mode==='client' && NET.hostConn){
+    NET.hostConn.send({t:'rename', name:playerName});
+  }
+}
+function enterMenu(){
+  matchToken++;
+  gamePhase = 'idle';
+  clearSceneGame();
+  tweens.length = 0;
+  evQueue.length = 0;
+  restoreLights();
+  setTurn(''); logEl.innerHTML = '';
+  moneyHUDEL.style.display = 'none';
+  winScreen.classList.add('hidden');
+  if (chatOpen) setChat(false);
+  inMenu = true; starting = false;
+  menuHUD.classList.remove('away');
+  nameInput.value = playerName === 'OSPITE' ? '' : playerName;
+  if (NET.mode === 'off') myLobbySlot = CENTER_SLOT;
+  applyCameraRole(myLobbySlot);
+  buildMenuCards();
+  refreshMenuHint();
+  activePoint = null;
+}
+
+// ---------- input ----------
+const raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+function menuPick(cx, cy){
+  _ndc.set((cx/innerWidth)*2-1, -(cy/innerHeight)*2+1);
+  raycaster.setFromCamera(_ndc, camera);
+  const hits = raycaster.intersectObjects(menuCards.map(mc=>mc.mesh.outer), true);
+  if (!hits.length) return null;
+  let o = hits[0].object;
+  while (o && !menuCards.some(mc=>mc.mesh.outer === o)) o = o.parent;
+  return menuCards.find(mc=>mc.mesh.outer === o) || null;
+}
+addEventListener('pointermove', e=>{
+  const nx = (e.clientX/innerWidth)*2 - 1;
+  const ny = (e.clientY/innerHeight)*2 - 1;
+  targetYaw   = BASE_YAW + clamp(-nx*1.0, -1.05, 1.05);
+  targetPitch = BASE_PITCH + clamp(-ny*0.5, -0.22, 0.85);
+  if (inMenu && !starting && netPanel.classList.contains('hidden')){
+    const it = menuPick(e.clientX, e.clientY);
+    if (it !== hoveredMenu){
+      hoveredMenu = it;
+      menuCards.forEach(mc=> mc.label.redraw(menuCardLabelFor(mc.rank), mc === it));
+    }
+    renderer.domElement.style.cursor = it ? 'pointer' : 'default';
+  } else if (renderer.domElement.style.cursor !== 'default'){
+    renderer.domElement.style.cursor = 'default';
+  }
+});
+addEventListener('pointerdown', e=>{
+  if (!inMenu || starting) return;
+  if (e.target !== renderer.domElement) return;
+  AudioFX.init();
+  if (hoveredMenu){
+    if (hoveredMenu.rank === 0) pickAce();
+    else pickKing();
+  }
+});
+addEventListener('keydown', e=>{
+  if (e.target === nameInput || e.target === chatInput || e.target === npCode) return;
+  if (e.key === 'Tab' && NET.mode !== 'off'){ e.preventDefault(); setChat(!chatOpen); return; }
+  if (choiceResolve){
+    const o = curOptions.find(o=>o.key === e.key);
+    if (o) choiceResolve(o.action);
+    return;
+  }
+  if (inMenu && !starting && netPanel.classList.contains('hidden')){
+    if (e.key === '1'){ pickAce(); }
+    else if (e.key === '2'){ pickKing(); }
+    else if (e.key === 'Enter'){
+      if (NET.mode === 'host') pickKing();
+      else if (NET.mode === 'off') pickAce();
+    }
+  }
+});
+nameInput.addEventListener('keydown', e=>{
+  e.stopPropagation();
+  if (e.key === 'Enter'){ saveName(); nameInput.blur(); }
+});
+nameInput.addEventListener('blur', saveName);
+
+btnRematch.onclick = ()=>{
+  winScreen.classList.add('hidden');
+  restoreLights();
+  if (NET.mode === 'host') startMatchMP();
+  else if (NET.mode === 'off') startSoloWithAnnounce();
+};
+btnChange.onclick = ()=>{
+  winScreen.classList.add('hidden');
+  restoreLights();
+  if (NET.mode === 'off') enterMenu();
+  else leaveNet(true);
+};
+
+// ---------- polvere / fumo ----------
+const DUST_N = 90;
+const dpos = new Float32Array(DUST_N*3);
+const ddat = [];
+for (let i=0;i<DUST_N;i++){
+  ddat.push({ a: Math.random()*Math.PI*2, r: 0.25 + Math.random()*1.15,
+              y: 0.85 + Math.random()*1.05, sp: 0.008 + Math.random()*0.02, ph: Math.random()*Math.PI*2 });
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dpos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  size: 0.018, map: puffTex, transparent: true, opacity: 0.4, color: 0xffd9a6,
+  blending: THREE.AdditiveBlending, depthWrite: false
+}));
+scene.add(dust);
+function updateDust(t, dt){
+  for (let i=0;i<DUST_N;i++){
+    const d = ddat[i];
+    d.y -= d.sp*dt;
+    if (d.y < 0.85) d.y = 1.9;
+    dpos[i*3]   = Math.cos(d.a)*d.r + Math.sin(t*0.22 + d.ph)*0.07;
+    dpos[i*3+1] = d.y;
+    dpos[i*3+2] = Math.sin(d.a)*d.r + Math.cos(t*0.18 + d.ph*1.3)*0.07;
+  }
+  dustGeo.attributes.position.needsUpdate = true;
+}
+const smokePool = [];
+for (let i=0;i<10;i++){
+  const m = new THREE.SpriteMaterial({ map:puffTex, color:0xb9b3ab, transparent:true, opacity:0, depthWrite:false });
+  const s = new THREE.Sprite(m); s.visible = false;
+  scene.add(s);
+  smokePool.push({ s, active:false, age:0, life:1, rise:0.15, seed:0 });
+}
+const _smk = new THREE.Vector3();
+function updateSmokeAndCigs(dt){
+  players.forEach(p=>{
+    if (!p.bot || !p.bot.ember) return;
+    p.bot.smokeT -= dt;
+    if (p.bot.smokeT <= 0){
+      p.bot.ember.getWorldPosition(_smk);
+      const sp = smokePool.find(q=>!q.active);
+      if (sp){
+        sp.active = true; sp.age = 0; sp.life = 2.2 + Math.random()*1.4;
+        sp.rise = 0.13 + Math.random()*0.08;
+        sp.s.position.copy(_smk);
+        sp.seed = Math.random()*10;
+        sp.s.visible = true;
+      }
+      p.bot.smokeT = 0.4 + Math.random()*0.35;
+    }
+  });
+  for (const p of smokePool){
+    if (!p.active) continue;
+    p.age += dt;
+    if (p.age >= p.life){ p.active = false; p.s.visible = false; continue; }
+    const k = p.age/p.life;
+    p.s.position.y += p.rise*dt;
+    p.s.position.x += Math.sin(p.seed + p.age*1.4)*0.0006;
+    p.s.position.z += Math.cos(p.seed*0.8 + p.age*1.1)*0.0006;
+    const sc = 0.024 + k*0.055;
+    p.s.scale.set(sc, sc, 1);
+    p.s.material.opacity = 0.12 * Math.sin(Math.min(1, k) * Math.PI);
+  }
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+camera.rotation.order = 'YXZ';
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  lampGroup.rotation.z = Math.sin(t*0.5)*0.045 + Math.sin(t*0.27 + 2)*0.02;
+  lampGroup.rotation.x = Math.sin(t*0.38 + 1)*0.03;
+  yaw   += (targetYaw - yaw) * Math.min(1, dt*5);
+  pitch += (targetPitch - pitch) * Math.min(1, dt*5);
+  camera.position.copy(camBase);
+  camera.position.y += Math.sin(t*1.15)*0.005;
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+  camera.updateMatrixWorld();
+  players.forEach(p=>{ if (p.bot){ p.bot.lookPoint = activePoint; p.bot.update(t, dt); } });
+  Object.values(lobbyAvatars).forEach(a=>{ a.lookPoint = activePoint; a.update(t, dt); });
+  updateSmokeAndCigs(dt);
+  updateDust(t, dt);
+  updateTweens(dt);
+  renderer.render(scene, camera);
+}
+animate();
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+enterMenu();
+</script>
+</body>
+</html>
