@@ -39,35 +39,6 @@ h1{
 }
 #fonte{margin-top:14px;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muto)}
 #fonte::before,#fonte::after{content:'··';margin:0 10px;color:rgba(232,193,90,.4)}
-/* ---- COUNTDOWN ---- */
-#countdown{
-  min-height:52vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  padding:60px 20px 90px;
-  transition:opacity .8s ease,transform .8s ease;
-}
-#countdown.svanisce{opacity:0;transform:scale(1.04);pointer-events:none}
-.cd-etichetta{
-  font-size:clamp(15px,2.6vw,24px);letter-spacing:.42em;text-transform:uppercase;
-  color:var(--testo);font-weight:600;margin-bottom:34px;
-}
-.cd-etichetta b{color:var(--oro);font-weight:800}
-.cd-timer{display:flex;align-items:flex-start;gap:clamp(8px,2.4vw,26px)}
-.cd-gruppo{display:flex;flex-direction:column;align-items:center;gap:14px}
-.cd-num{
-  font-size:clamp(58px,13.5vw,150px);font-weight:800;line-height:1;
-  min-width:2.05ch;text-align:center;font-variant-numeric:tabular-nums;
-  background:linear-gradient(180deg,#fff3c4 0%,var(--oro) 55%,#96722a 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 6px 26px rgba(232,193,90,.25));
-}
-.cd-lbl{font-size:clamp(10px,1.4vw,14px);letter-spacing:.5em;text-transform:uppercase;color:var(--muto);margin-left:.5em}
-.cd-sep{
-  font-size:clamp(48px,11vw,124px);font-weight:800;line-height:1;color:rgba(232,193,90,.6);
-  animation:batti 1.1s ease-in-out infinite;
-}
-@keyframes batti{0%,100%{opacity:.9}50%{opacity:.25}}
-.cd-data{margin-top:44px;font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:rgba(141,130,102,.85)}
 /* ---- barra di ricerca ---- */
 #cercaZone{
   position:sticky;top:0;z-index:20;
@@ -199,7 +170,7 @@ main{max-width:1220px;margin:0 auto;padding:30px 26px 30px}
   font-size:13px;letter-spacing:.1em;text-transform:uppercase;transition:.2s;
 }
 .avviso .mini:hover{background:rgba(232,193,90,.12)}
-/* ---- POP-UP DI APERTURA ---- */
+/* ---- POP-UP DI BENVENUTO (prima visita) ---- */
 #velo{
   position:fixed;inset:0;z-index:50;
   display:flex;align-items:center;justify-content:center;
@@ -301,18 +272,6 @@ footer{padding:30px 20px 46px;text-align:center;color:rgba(141,130,102,.75);font
   <div id="fonte" hidden></div>
 </header>
 
-<div id="countdown">
-  <div class="cd-etichetta">l'apertura sarà alle <b>23:00</b></div>
-  <div class="cd-timer">
-    <div class="cd-gruppo"><div class="cd-num" id="cdH">00</div><div class="cd-lbl">ore</div></div>
-    <div class="cd-sep">:</div>
-    <div class="cd-gruppo"><div class="cd-num" id="cdM">00</div><div class="cd-lbl">minuti</div></div>
-    <div class="cd-sep">:</div>
-    <div class="cd-gruppo"><div class="cd-num" id="cdS">00</div><div class="cd-lbl">secondi</div></div>
-  </div>
-  <div class="cd-data">28 agosto 2026</div>
-</div>
-
 <div id="cercaZone" style="display:none">
   <div class="barra">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -333,7 +292,7 @@ footer{padding:30px 20px 46px;text-align:center;color:rgba(141,130,102,.75);font
   © 2026 &nbsp;·&nbsp; <span class="tm">AURIOBELLO<span class="tm-sym">™</span></span> &nbsp;·&nbsp; tutti i diritti riservati
 </footer>
 
-<!-- ==== POP-UP DI APERTURA (prima visita / fine countdown) ==== -->
+<!-- ==== POP-UP DI BENVENUTO (solo prima visita) ==== -->
 <div id="velo">
   <div class="popup" role="dialog" aria-modal="true" aria-labelledby="popTit">
     <div class="pop-occhiello">28 agosto 2026 · ore 23:00</div>
@@ -358,12 +317,11 @@ footer{padding:30px 20px 46px;text-align:center;color:rgba(141,130,102,.75);font
 <script>
 /* ============================================================
    CONFIGURAZIONE
-   LANCIO: data e ora di apertura (mese: 0=gennaio ... 7=agosto)
-   POPUP_KEY: il "ricordo" del pop-up nel browser. Se un giorno
-   vorrai farlo riapparire a tutti, cambia il numero in fondo:
+   POPUP_KEY: il "ricordo" del pop-up nel browser. Invariata di
+   proposito: chi ha già visto il pop-up del lancio non lo
+   rivedrà. Per farlo riapparire a tutti, cambia il numero:
    es. 'ag_popup_v2'
    ============================================================ */
-const LANCIO=new Date(2026,7,28,23,0,0);     // 28 agosto 2026, ore 23:00
 const POPUP_KEY='ag_popup_v1';
 
 /* ===== sfondo: nebulosa dorata in WebGL puro ===== */
@@ -436,7 +394,7 @@ const POPUP_KEY='ag_popup_v1';
 })();
 
 /* ===== catalogo: API di GitHub quando e hostato, giochi.js in locale ===== */
-const Hub=(function(){
+(function(){
   const TAG_CLS={horror:'t-horror','3d':'t-3d',online:'t-online',ritmo:'t-ritmo',violenza:'t-violenza'};
   const TAG_LBL={'3d':'3D'};
   const main=document.querySelector('main');
@@ -530,8 +488,8 @@ const Hub=(function(){
     main.innerHTML='';
     const d=document.createElement('div');d.className='avviso';
     if(online){
-      d.innerHTML='<div class="tit">i giochi non sono ancora arrivati</div>'
-        +'<p>Il countdown è scaduto ma nel repository non trovo ancora le cartelle con i giochi.<br>Riprova tra poco — o clicca qui sotto.</p>';
+      d.innerHTML='<div class="tit">i giochi non si trovano</div>'
+        +'<p>Non riesco a vedere le cartelle con i giochi nel repository.<br>Riprova tra poco — o clicca qui sotto.</p>';
       main.appendChild(d);
       const b=document.createElement('button');b.className='mini';b.textContent='riprova adesso';
       b.onclick=()=>avvio();
@@ -572,20 +530,16 @@ const Hub=(function(){
     main.innerHTML='<div id="stato"><div class="anello"></div><div class="testo">'+testo+'</div></div>';
   }
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  let tentativo=0;
   async function avvio(){
     if(githubInfo()){
-      for(let i=0;i<90;i++){ // ~30 minuti di tentativi automatici
+      for(let i=0;i<6;i++){ // qualche tentativo, poi avvisa
         try{
           const cats=await daGitHub();
           render(cats,'catalogo automatico · github');
           return;
         }catch(e){}
-        tentativo++;
-        setStato(tentativo<=1
-          ?'sto cercando i giochi…'
-          :'i giochi non sono ancora arrivati<br>riprovo tra poco…');
-        await sleep(20000);
+        setStato('sto cercando i giochi…');
+        await sleep(3000);
       }
       errore(true);
     }else{
@@ -678,70 +632,25 @@ const Hub=(function(){
   });
   pulisci.addEventListener('click',()=>{cerca.value='';applicaFiltro();cerca.focus();});
 
-  return{avvio};
-})();
-
-/* ===== countdown + pop-up: le tre strade =====
-   1) sei qui PRIMA delle 23:00 → countdown; allo scadere il pop-up
-      ti appare mentre il countdown svanisce (il momento da mito)
-   2) entri per la PRIMA volta dopo le 23:00 → pop-up subito
-   3) sei già passato → niente pop-up, dritto al catalogo          */
-(function(){
-  const cdEl=document.getElementById('countdown');
-  const cdH=document.getElementById('cdH'),cdM=document.getElementById('cdM'),cdS=document.getElementById('cdS');
+  /* ---- pop-up di benvenuto: solo alla prima visita ---- */
   const velo=document.getElementById('velo');
-  let sbloccato=false;
-
-  /* il ricordo del pop-up nel browser (con paracadute se localStorage è vietato) */
   let memoria={};
   try{memoria=window.localStorage||{};}catch(e){memoria={};}
   const giaVisto=()=>{try{return memoria.getItem(POPUP_KEY)==='1';}catch(e){return false;}};
   const segnaVisto=()=>{try{memoria.setItem(POPUP_KEY,'1');}catch(e){}};
-
   function mostraPopup(){
-    if(giaVisto())return;       // già visto: mai più
-    segnaVisto();               // dal momento in cui lo mostro, è fatto
+    if(giaVisto())return;
+    segnaVisto();
     velo.classList.add('attivo');
   }
   function chiudiPopup(){velo.classList.remove('attivo');}
   document.getElementById('popBtn').addEventListener('click',chiudiPopup);
-  /* si chiude anche cliccando fuori o premendo Esc: gentile ma non insistente */
   velo.addEventListener('click',e=>{if(e.target===velo)chiudiPopup();});
   addEventListener('keydown',e=>{if(e.key==='Escape'&&velo.classList.contains('attivo'))chiudiPopup();});
 
-  function apri(){
-    if(sbloccato)return;
-    sbloccato=true;
-    cdEl.classList.add('svanisce');
-    setTimeout(()=>{cdEl.hidden=true;},850);
-    setTimeout(mostraPopup,520);     // il pop-up entra mentre il countdown svanisce
-    Hub.avvio();                     // il catalogo si carica dietro le quinte
-  }
-  function tick(){
-    if(sbloccato)return;
-    const rimasto=LANCIO-Date.now();
-    if(rimasto<=0){
-      cdH.textContent='00';cdM.textContent='00';cdS.textContent='00';
-      apri();
-      return;
-    }
-    cdH.textContent=String(Math.floor(rimasto/3600000)).padStart(2,'0');
-    cdM.textContent=String(Math.floor(rimasto/60000)%60).padStart(2,'0');
-    cdS.textContent=String(Math.floor(rimasto/1000)%60).padStart(2,'0');
-  }
-
-  if(Date.now()>=LANCIO.getTime()){
-    /* dopo l'apertura: countdown saltato, catalogo subito,
-       pop-up solo se è la prima volta in assoluto */
-    sbloccato=true;
-    cdEl.hidden=true;
-    Hub.avvio();
-    if(!giaVisto())setTimeout(mostraPopup,400);
-  }else{
-    /* prima dell'apertura: countdown, e in attesa dei miti */
-    tick();
-    setInterval(tick,250);
-  }
+  /* ---- partenza: catalogo subito, pop-up sopra se è la prima volta ---- */
+  avvio();
+  if(!giaVisto())setTimeout(mostraPopup,400);
 })();
 </script>
 </body>
