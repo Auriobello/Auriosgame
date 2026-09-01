@@ -133,10 +133,25 @@ main{max-width:1220px;margin:0 auto;padding:30px 26px 30px}
 }
 .card .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease}
 .card:hover .thumb img{transform:scale(1.05)}
+/* segnaposto quando manca il png: pastigliina IN ARRIVO + nome */
 .card .noimg{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
-  padding:12px;color:rgba(232,193,90,.55);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
-  background:repeating-linear-gradient(45deg,rgba(232,193,90,.03) 0 12px,transparent 12px 24px),#0a0806;
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  text-align:center;padding:14px;
+  background:repeating-linear-gradient(45deg,rgba(232,193,90,.04) 0 12px,transparent 12px 24px),#0a0806;
+}
+.card .noimg-arrivo{
+  font-size:13px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--oro);
+  padding:6px 16px;border-radius:999px;
+  border:1px solid rgba(232,193,90,.35);
+  background:rgba(232,193,90,.07);
+  box-shadow:0 0 16px rgba(232,193,90,.12);
+}
+.card .noimg-nome{
+  font-size:12.5px;color:rgba(232,193,90,.6);
+  letter-spacing:.06em;line-height:1.4;word-break:break-word;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .tags:empty{display:none}
@@ -458,8 +473,14 @@ const POPUP_KEY='ag_popup_v1';
     const nome=document.createElement('div');
     nome.className='nome';nome.textContent=g.mostra;
     const th=document.createElement('div');th.className='thumb';
+    /* segnaposto quando manca il png: pastigliina IN ARRIVO + nome del gioco */
     const noimg=document.createElement('div');noimg.className='noimg';
-    noimg.textContent=g.mostra;th.appendChild(noimg);
+    const noimgTop=document.createElement('div');
+    noimgTop.className='noimg-arrivo';noimgTop.textContent='IN ARRIVO';
+    const noimgNome=document.createElement('div');
+    noimgNome.className='noimg-nome';noimgNome.textContent=g.mostra;
+    noimg.append(noimgTop,noimgNome);
+    th.appendChild(noimg);
     const img=document.createElement('img');
     img.alt='';img.loading='lazy';
     img.onload=()=>noimg.remove();
